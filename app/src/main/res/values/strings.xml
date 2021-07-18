@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Inventario Físico</string>
+    <string name="seleccionAlmacen">Seleccione un almacén</string>
+    <string name="seleccionUbicacion">Seleccione una ubicación</string>
+</resources>

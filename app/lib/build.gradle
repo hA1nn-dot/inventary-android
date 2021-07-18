@@ -1,0 +1,13 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+dependencies {
+    implementation files('C:\\Users\\hgq_2\\Desktop\\jtds_versions\\jtds1.2.1\\jtds-1.2.1.jar')
+    implementation fileTree(dir: 'C:\\Users\\hgq_2\\Desktop\\jtds_versions\\jtds1.2.1', include: ['*.aar', '*.jar'], exclude: [])
+}
