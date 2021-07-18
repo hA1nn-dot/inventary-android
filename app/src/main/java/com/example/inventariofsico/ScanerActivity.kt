@@ -174,7 +174,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             text_cantidad!!.requestFocus(1)
 
         }else{
-            //Toast.makeText(this@ScanerActivity, productoDescrition, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@ScanerActivity, productoDescrition, Toast.LENGTH_SHORT).show()
         }
     }
 

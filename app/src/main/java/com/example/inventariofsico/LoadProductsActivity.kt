@@ -302,13 +302,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
                 alert.setMessage("Está seguro desea salir del sistema?").setCancelable(false)
                     .setPositiveButton("Salir")
                     { _, _ ->
-                        try {
-                            deleteMainCodigos().execute()
-                            SQLiteFunction._deleteUser(this)
-                            finish()
-                        }catch (liteX : SQLiteException){
-                            Toast.makeText(this@LoadProductsActivity,liteX.message.toString(),Toast.LENGTH_SHORT).show()
-                        }
+                        finish()
                     }
                     .setNegativeButton("No")
                     { _, _ ->
