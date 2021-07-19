@@ -170,7 +170,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
                             connection
                         )
                         val currentConteo = conteoSQL + it.get_CantidadProducto()!!
-                        val conteoDifference = currentConteo - existenceProduct
+                        val conteoDifference = existenceProduct - currentConteo
                         if(it.get_Conteo() == "Conteo 1"){
                             queryString = "UPDATE CONTEOS_IF SET CONTEO1 = $currentConteo," +
                                     " USUARIO1 = '${it.getUserName()}'," +
