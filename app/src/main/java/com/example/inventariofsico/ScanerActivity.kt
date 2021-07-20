@@ -1,4 +1,5 @@
 package com.example.inventariofsico
+import android.database.SQLException
 import android.database.sqlite.SQLiteException
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -143,40 +144,44 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         }
         return false
     }
-
     private fun searchCode(barcode: String){
-        var errorMessage = ""
+        try{
+            val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)
+            if(productoDescrition != "Producto no encontrado")     //if exists code in mainCodigos table
+                displayDataProduct()
+            else if(SQLiteFunction.isCodeExists(this,barcode))    //if exists code in codigos table
+                text_cantidad!!.setText(SQLiteFunction.getCantidad(this,barcode))
+            else
+                saveUnknownProduct()    //add new product
+            text_descripcion!!.text = productoDescrition
+        }catch (SQLError: SQLException){
+            Toast.makeText(this@ScanerActivity, SQLError.message.toString(), Toast.LENGTH_SHORT).show()
+        }catch (SQLiteError: SQLiteException){
+            Toast.makeText(this@ScanerActivity, SQLiteError.message.toString(), Toast.LENGTH_SHORT).show()
+        }catch (nullPointerError: NullPointerException){
+            Toast.makeText(this@ScanerActivity, nullPointerError.message.toString(), Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun displayDataProduct(){
+        val barcode = text_codigo!!.text.toString()
         var cantidadFound = "1"
 
-        val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)
-        if(productoDescrition != "Producto no encontrado"){
-            loadUnitsProduct(barcode)
-            id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
-            id_producto = SQLiteFunction.getIDProduct(this,barcode)
+        //Display product units
+        loadUnitsProduct(barcode)
+        val unit = spinnerUnidades!!.selectedItem.toString()
 
+        //Get id for product
+        id_unidad = SQLiteFunction.getIDUnidad(this,unit)
+        id_producto = SQLiteFunction.getIDProduct(this,barcode)
 
+        if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
+            cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
 
-            text_descripcion!!.text = productoDescrition
-            text_IDUnidad!!.text = "id_unidad: $id_unidad"
-            text_IDProducto!!.text = "id_producto: $id_producto"
-            text_cantidad!!.isEnabled = true
-            try {
-                if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
-                    cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
-                text_cantidad!!.setText(cantidadFound)
-            }catch (liteX: SQLiteException){
-                errorMessage = liteX.message.toString()
-            }catch (nullvar: NullPointerException){
-                errorMessage = nullvar.message.toString()
-            }
-            if(errorMessage != "")
-                Toast.makeText(this@ScanerActivity, errorMessage, Toast.LENGTH_SHORT).show()
-
-            text_cantidad!!.requestFocus(1)
-
-        }else{
-            saveUnknownProduct()
-        }
+        text_cantidad!!.isEnabled = true
+        text_cantidad!!.setText(cantidadFound)
+        text_cantidad!!.requestFocus(1)
     }
 
     private fun saveUnknownProduct(){

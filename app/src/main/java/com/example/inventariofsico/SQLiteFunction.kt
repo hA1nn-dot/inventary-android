@@ -24,9 +24,26 @@ class SQLiteFunction {
             }catch (nullvar: NullPointerException){
                 throw NullPointerException("Null exception: "+nullvar.message.toString())
             }
-
-
         }
+
+        fun getCantidad(context: Context, barcode: String): String{
+            try {
+                var cantidad = "1"
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT cantidad FROM codigos WHERE codigo ) $barcode",null)
+                if(fila.moveToFirst())
+                    cantidad = fila.getString(fila.getColumnIndex("cantidad"))
+                fila.close()
+                db.close()
+                return cantidad
+            }catch (sqlexc: SQLiteException){
+                throw SQLiteException("Problemas con SQLite: "+sqlexc.message.toString())
+            }catch (nullvar: NullPointerException){
+                throw NullPointerException("Null exception: "+nullvar.message.toString())
+            }
+        }
+
         private fun getUbicacion(context: Context): Int{
             try {
                 var id_ubicacion = 0
@@ -62,6 +79,22 @@ class SQLiteFunction {
                 if(fila.moveToFirst())
                     status = true
 
+                fila.close()
+                db.close()
+                return status
+            }catch (liteX: SQLiteException){
+                throw SQLiteException("Error SQLite: "+liteX.message.toString())
+            }
+        }
+
+        fun isCodeExists(context: Context, barcode: String): Boolean{
+            var status = false
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT * FROM codigos where codigo = '$barcode'",null)
+                if(fila.moveToFirst())
+                    status = true
                 fila.close()
                 db.close()
                 return status
