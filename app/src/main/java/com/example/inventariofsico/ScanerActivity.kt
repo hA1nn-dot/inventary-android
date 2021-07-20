@@ -84,8 +84,8 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         var errorMessage = ""
         id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
         id_producto = SQLiteFunction.getIDProduct(this,barcode)
-        text_IDUnidad!!.text = "id_unidad: $id_unidad"
-        text_IDProducto!!.text = "id_producto: $id_producto"
+        //text_IDUnidad!!.text = "id_unidad: $id_unidad"
+        //text_IDProducto!!.text = "id_producto: $id_producto"
 
         try {
             if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
