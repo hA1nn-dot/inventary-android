@@ -350,5 +350,24 @@ class SQLiteFunction {
             }
         }
 
+        fun addUnknownProduct(product: Map<String,String>,context: Context){
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                val registro = ContentValues()
+                registro.put("codigo",product["barcode"])
+                registro.put("cantidad",product["amount"])
+                registro.put("fecha_cap", getFecha(context))
+                registro.put("id_producto",0)
+                registro.put("id_ubicacion",0)
+                registro.put("id_unidad", 0)
+                registro.put("subido", 1)
+                db.insert("codigos",null,registro)
+                db.close()
+            }catch (SQliteError: SQLiteException){
+                throw SQliteError
+            }
+        }
+
     }
 }

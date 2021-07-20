@@ -180,12 +180,18 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
     }
 
     private fun saveUnknownProduct(){
+        val barcode = text_codigo!!.text.toString()
+        val amount = text_cantidad!!.text.toString()
+
+        val product: Map<String,String> = mapOf(
+            Pair("barcode",barcode),
+            Pair("amount",amount))
         val alert = AlertDialog.Builder(this)
-        alert.setMessage("No se encuentra este producto en el lector.\n ¿Desea guardarlo?")
+        alert.setMessage("No se encuentra este producto en el lector.\n¿Desea guardarlo?")
             .setCancelable(false)
             .setPositiveButton("Guardar")
             { _, _ ->   //Save unknown product
-
+                SQLiteFunction.addUnknownProduct(product,this)
             }
             .setNegativeButton("No")
             { _, _ ->   //Close dialog
