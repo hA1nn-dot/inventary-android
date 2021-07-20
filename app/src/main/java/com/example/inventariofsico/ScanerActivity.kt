@@ -6,6 +6,7 @@ import android.text.InputFilter
 import android.view.KeyEvent
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import org.w3c.dom.Text
 import java.lang.NullPointerException
 
@@ -174,8 +175,25 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             text_cantidad!!.requestFocus(1)
 
         }else{
-            Toast.makeText(this@ScanerActivity, productoDescrition, Toast.LENGTH_SHORT).show()
+            saveUnknownProduct()
         }
+    }
+
+    private fun saveUnknownProduct(){
+        val alert = AlertDialog.Builder(this)
+        alert.setMessage("No se encuentra este producto en el lector.\n ¿Desea guardarlo?")
+            .setCancelable(false)
+            .setPositiveButton("Guardar")
+            { _, _ ->   //Save unknown product
+
+            }
+            .setNegativeButton("No")
+            { _, _ ->   //Close dialog
+
+            }
+        val title = alert.create()
+        title.setTitle("Producto no encontrado")
+        title.show()
     }
 
     private fun loadUnitsProduct(barcode: String) {
@@ -191,7 +209,6 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
     }
 
     private fun guardarCodigo(){
-
         var barcode = text_codigo!!.text.toString()
         var cant = text_cantidad!!.text.toString()
         var unidadtxt = spinnerUnidades!!.selectedItem.toString()
