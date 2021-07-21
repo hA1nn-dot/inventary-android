@@ -350,5 +350,21 @@ class SQLiteFunction {
             }
         }
 
+        fun isUserExistsInDataBase(context: Context):Boolean{
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val c = db.rawQuery("select * from personal",null)
+            if(c.count == 0){
+                c.close()
+                db.close()
+                return false
+            }else{
+                c.close()
+                db.close()
+                return true
+            }
+
+        }
+
     }
 }

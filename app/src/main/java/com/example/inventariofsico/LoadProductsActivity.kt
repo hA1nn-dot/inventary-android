@@ -61,7 +61,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         title.text = "Bienvenido ${usuario!!.getUserName()}"
 
         refreshCantidad()
-        if(productos_cantidad != "0"){  //Is session not closed
+        if(SQLiteFunction.isUserExistsInDataBase(this)){
             putSQLiteUserData()
             buttonsBehaviour(false)
         }else{
