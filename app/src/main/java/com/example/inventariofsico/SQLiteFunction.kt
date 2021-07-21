@@ -104,8 +104,8 @@ class SQLiteFunction {
         }
 
 
-        fun _updateRegister(context: Context,cantidad: String,id_producto: Int,id_unidad: Int): String{
-            return try {
+        fun _updateRegister(context: Context,cantidad: String,id_producto: Int,id_unidad: Int){
+            try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
                 val values = ContentValues()
@@ -291,7 +291,7 @@ class SQLiteFunction {
                 val db = admin.writableDatabase
                 val fila = db.rawQuery("SELECT nombre FROM mainCodigos where barcode = '$codigo_leido' OR codigo_producto = '$codigo_leido'",null)
                 if(fila.moveToFirst())
-                    descripcion = fila.getString(0)
+                    descripcion = fila.getString(fila.getColumnIndex("nombre"))
                 fila.close()
                 db.close()
             }catch (sqlexc: SQLException){

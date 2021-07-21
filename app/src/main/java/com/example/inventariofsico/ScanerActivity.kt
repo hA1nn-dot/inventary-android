@@ -152,7 +152,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             else if(SQLiteFunction.isCodeExists(this,barcode))    //if exists code in codigos table
                 text_cantidad!!.setText(SQLiteFunction.getCantidad(this,barcode))
             else
-                saveUnknownProduct()    //add new product
+                //saveUnknownProduct()    //add new product
             text_descripcion!!.text = productoDescrition
         }catch (SQLError: SQLException){
             Toast.makeText(this@ScanerActivity, SQLError.message.toString(), Toast.LENGTH_SHORT).show()
@@ -228,10 +228,12 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         barcode = barcode.replace(" ","")
 
         if(barcode.isNotEmpty() && cant.isNotEmpty()){
-            result = if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
+            if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
                 SQLiteFunction._updateRegister(this,cant,id_producto,id_unidad)
-            else{
-                SQLiteFunction.guardarCodigo(this,barcode.trim(),cant.trim(),unidadtxt)
+                result = "Producto Actualizado"
+            }else{
+                saveUnknownProduct()
+                result = "Producto Guardado"
             }
             cleanBoxes()
         }else

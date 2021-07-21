@@ -42,8 +42,8 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_load_products)
         getSupportActionBar()!!.hide()
-        val bundle = this.intent.extras
-        val bundleUsuario = bundle?.getSerializable("usuarioEnviado") as Usuario
+        //val bundle = this.intent.extras
+        //val bundleUsuario = bundle?.getSerializable("usuarioEnviado") as Usuario
         val title: TextView = findViewById(R.id.titulo)
 
         btnLoadProducts = findViewById(R.id.btn_CargarDatos)
@@ -57,8 +57,8 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         btnScan = findViewById(R.id.btn_scan)
         btn_Send = findViewById(R.id.btn_sendData)
 
-        usuario = bundleUsuario
-        title.text = "Bienvenido ${usuario!!.getUserName()}"
+        //usuario = bundleUsuario
+        //title.text = "Bienvenido ${usuario!!.getUserName()}"
 
         refreshCantidad()
         if(productos_cantidad != "0"){  //Is session not closed
@@ -302,6 +302,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
                 alert.setMessage("Está seguro desea salir del sistema?").setCancelable(false)
                     .setPositiveButton("Salir")
                     { _, _ ->
+                        SQLiteFunction._deleteUsuario(this)
                         finish()
                     }
                     .setNegativeButton("No")
