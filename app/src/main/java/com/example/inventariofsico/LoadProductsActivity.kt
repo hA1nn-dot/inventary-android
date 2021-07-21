@@ -341,7 +341,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
                     val nombreAlmacen: String = almacenSeleccionado as String
                     val id_almacen: String = SQLfunction.getIDAlmacen(nombreAlmacen,context)
                     if(nombreAlmacen == "B4 RIO VERDE"){
-                        val ubicacionRioverde: List<String> = listOf("All areas")
+                        val ubicacionRioverde: List<String> = listOf("Todos")
                         ubicacionList = ubicacionRioverde
                         ubicationRioVerdeList = SQLfunction.getUbicaciones(id_almacen.toInt(),context)
                     }else{
@@ -351,7 +351,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
                 }else if (almacenSeleccionado == null){
                     val nombreAlmacen: String = almacenList!!.first().toString()
                     if(nombreAlmacen == "B4 RIO VERDE"){
-                        val ubicacionRioverde: List<String> = listOf("All areas")
+                        val ubicacionRioverde: List<String> = listOf("Todos")
                         ubicacionList = ubicacionRioverde
                     }else{
                         val id_almacen: String = SQLfunction.getIDAlmacen(nombreAlmacen,context)
@@ -424,7 +424,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         override fun doInBackground(vararg p0: Void?): String? {
             try{
                 var resultCodigos = ""
-                if(ubicationName == "All areas"){
+                if(ubicationName == "Todos"){
                     if(dateSelected.isNullOrEmpty()) return "Seleccione una fecha"
                     if (!SQLfunction.isInventaryExist(dateSelected, context))
                         return "No hay conteos en la fecha $dateSelected"
