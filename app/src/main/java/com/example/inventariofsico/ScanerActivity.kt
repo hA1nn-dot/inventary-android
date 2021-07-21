@@ -52,8 +52,13 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         spinnerUnidades!!.adapter = adapterUnidad
 
         btnGuardar!!.setOnClickListener {
-            guardarCodigo()
-            cleanBoxes()
+            if(text_cantidad!!.text.toString() != "0"){
+                guardarCodigo()
+                cleanBoxes()
+            }else{
+                Toast.makeText(this, "Solo valores distintos de 0", Toast.LENGTH_SHORT).show()
+            }
+
         }
         btnCleanBoxes!!.setOnClickListener {
             cleanBoxes()
@@ -84,14 +89,11 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         var errorMessage = ""
         id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
         id_producto = SQLiteFunction.getIDProduct(this,barcode)
-        text_IDUnidad!!.text = "id_unidad: $id_unidad"
-        text_IDProducto!!.text = "id_producto: $id_producto"
 
         try {
             if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
                 cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
-            }else
-                Toast.makeText(this@ScanerActivity, "Producto Nuevo", Toast.LENGTH_SHORT).show()
+            }
             text_cantidad!!.setText(cantidadFound)
 
         }catch (liteX: SQLiteException){
@@ -133,7 +135,13 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
                     }
                     R.id.textCantidad -> {
                         if(keycode == KeyEvent.KEYCODE_ENTER){
-                            guardarCodigo()
+                            if(text_cantidad!!.text.toString() != "0"){
+                                guardarCodigo()
+                            }else{
+                                Toast.makeText(this, "Solo valores distintos de 0", Toast.LENGTH_SHORT).show()
+                                return false
+                            }
+
                         }
 
                     }

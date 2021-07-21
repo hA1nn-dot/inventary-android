@@ -209,18 +209,20 @@ class SQLiteFunction {
             return "Completado"
         }
 
-        fun _deleteUser(context: Context){
+        fun _updateUserNametoNull(context: Context){
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
-                db.execSQL("DELETE FROM personal")
+                val values = ContentValues()
+                values.put("usuario","")
+                db.update("personal",values,null,null)
                 db.close()
             }catch (liteX: SQLiteException){
                 throw liteX
             }
         }
 
-        fun loadUserData(context: Context, user: Usuario){
+        fun setUserName(context: Context, user: Usuario){
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
@@ -240,8 +242,11 @@ class SQLiteFunction {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
                 val fila = db.rawQuery("SELECT $column FROM personal",null)
-                if(fila.moveToFirst())
-                    list.add(fila.getString(0))
+                if(fila.moveToFirst()){
+                    if(fila.getString(0).isNotEmpty())
+                        list.add(fila.getString(0))
+                }
+
                 fila.close()
                 db.close()
                 return list
@@ -355,16 +360,69 @@ class SQLiteFunction {
             val db = admin.writableDatabase
             val c = db.rawQuery("select * from personal",null)
             if(c.count == 0){
-                c.close()
                 db.close()
+                c.close()
                 return false
-            }else{
-                c.close()
-                db.close()
-                return true
             }
-
+            db.close()
+            c.close()
+            return true
         }
+
+        fun isUserNullInDataBase(context: Context):Boolean{
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val c = db.rawQuery("select * from personal",null)
+            if(c.moveToFirst()){
+                if(c.getString(c.getColumnIndex("usuario")) == ""){
+                    db.close()
+                    c.close()
+                    return true
+                }
+            }
+            db.close()
+            c.close()
+            return false
+        }
+
+        fun createUser(context: Context,user: Usuario){
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val registro = ContentValues()
+            registro.put("usuario",user.getUserName())
+            db.insert("personal",null,registro)
+            db.close()
+        }
+
+        fun updateUserName(context: Context,user: Usuario){
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val registro = ContentValues()
+            registro.put("usuario",user.getUserName())
+            db.update("personal",registro,null,null)
+            db.close()
+        }
+
+        fun isPersonalTableInformationCompleted(context: Context): Boolean{
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val c = db.rawQuery("select * from personal",null)
+            if(c.moveToFirst()){
+                if(c.getString(c.getColumnIndex("usuario")) != ""
+                    && c.getString(c.getColumnIndex("almacen")) != ""
+                    && c.getString(c.getColumnIndex("ubicacion")) != ""
+                    && c.getString(c.getColumnIndex("conteo")) != ""
+                    && c.getString(c.getColumnIndex("fecha")) != ""){
+                    db.close()
+                    c.close()
+                    return true
+                }
+            }
+            db.close()
+            c.close()
+            return false
+        }
+
 
     }
 }

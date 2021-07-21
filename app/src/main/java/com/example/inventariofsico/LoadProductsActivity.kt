@@ -17,7 +17,7 @@ import java.lang.NumberFormatException
 import java.sql.SQLException
 import java.sql.Statement
 
-class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
+class LoadProductsActivity : AppCompatActivity() {
 
     private var spin_Almacenes: Spinner? = null
     private var spin_Ubicaciones: Spinner? = null
@@ -25,6 +25,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
     private var btnLoadProducts: Button? = null
     private var btn_Send: Button? = null
     private var btnScan: Button?= null
+    private var btnCloseSession: Button? = null
     private var fecha: EditText? = null
     private var loading: ProgressBar? = null
     private var usuario: Usuario? = null
@@ -33,6 +34,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
     private var cantidadTxtView: TextView? = null
     private var cantidadLectorTxtView: TextView? = null
     private var almacenSeleccionado: String? = null
+    private var dateEditText: EditText? = null
 
     private var almacenList: List<String>? = null
     private var ubicacionList: List<String>? = null
@@ -56,26 +58,35 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         cantidadLectorTxtView = findViewById(R.id.cantidad_lector)
         btnScan = findViewById(R.id.btn_scan)
         btn_Send = findViewById(R.id.btn_sendData)
-
+        btnCloseSession = findViewById(R.id.btn_CloseSession)
+        dateEditText = findViewById(R.id.eDate)
         usuario = bundleUsuario
         title.text = "Bienvenido ${usuario!!.getUserName()}"
 
         refreshCantidad()
         if(SQLiteFunction.isUserExistsInDataBase(this)){
-            putSQLiteUserData()
-            buttonsBehaviour(false)
+            if(productos_cantidad != "0"){
+                putSQLiteUserData()
+                buttonsBehaviour(false)
+            }else{
+                loadConteo()
+                getRequest().execute()
+            }
         }else{
-            loadConteo()
-            getRequest().execute()
+            finish()
         }
-
-
-
         btnLoadProducts!!.setOnClickListener {
+            setUserInfo()
             loadDataSQLite().execute()
         }
         btnScan!!.setOnClickListener {
             changeActivity()
+        }
+        btnCloseSession!!.setOnClickListener {
+            CloseSession()
+        }
+        dateEditText!!.setOnClickListener{
+            showDatePickerDialog()
         }
         btn_Send!!.setOnClickListener {
             val alert: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -115,6 +126,25 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
     }
 
 
+    private fun setUserInfo(){
+        try {
+            val almacenSelected = spin_Almacenes!!.selectedItem.toString()
+            val ubicationSelected = spin_Ubicaciones!!.selectedItem.toString()
+            val fechaEditText: EditText = findViewById(R.id.eDate)
+            val date: String = fechaEditText.text.toString()
+            val conteo = spin_Conteo!!.selectedItem.toString()
+            val userInfo = mapOf<String,String>(
+                Pair("almacen",almacenSelected),
+                Pair("ubicacion",ubicationSelected),
+                Pair("fecha",date),
+                Pair("conteo",conteo)
+            )
+            UserInfo.setUserInfoIntoLocalDataBase(this,userInfo)
+        }catch (pointerError: NullPointerException){
+            Toast.makeText(this,pointerError.message.toString(),Toast.LENGTH_LONG).show()
+        }
+
+    }
 
 
     internal inner class TaskSendingSQL( _registers:MutableList<RegisterData>)
@@ -245,19 +275,24 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         btnLoadProducts!!.isEnabled = status
     }
     private fun putSQLiteUserData(){
-        val almacen = SQLiteFunction.getSQLiteData(this,"almacen")
-        val ubicacion = SQLiteFunction.getSQLiteData(this,"ubicacion")
-        val date = SQLiteFunction.getSQLiteData(this,"fecha")
-        val conteo = SQLiteFunction.getSQLiteData(this,"conteo")
+        try {
+            val almacen = UserInfo.getAlmacen(this)
+            val ubicacion = UserInfo.getUbication(this)
+            val date = UserInfo.getFecha(this)
+            val conteo = UserInfo.getConteo(this)
 
-        val  adaptadorAlmacen = ArrayAdapter(this, android.R.layout.simple_spinner_item, almacen)
-        spin_Almacenes!!.adapter = adaptadorAlmacen
-        val  adaptadorUbicacion = ArrayAdapter(this, android.R.layout.simple_spinner_item, ubicacion)
-        spin_Ubicaciones!!.adapter = adaptadorUbicacion
-        val  adaptadorConteo = ArrayAdapter(this, android.R.layout.simple_spinner_item, conteo)
-        spin_Conteo!!.adapter = adaptadorConteo
-        val fechaVar: EditText = findViewById(R.id.eDate)
-        fechaVar.setText(date[0])
+            val  adaptadorAlmacen = ArrayAdapter(this, android.R.layout.simple_spinner_item, almacen)
+            spin_Almacenes!!.adapter = adaptadorAlmacen
+            val  adaptadorUbicacion = ArrayAdapter(this, android.R.layout.simple_spinner_item, ubicacion)
+            spin_Ubicaciones!!.adapter = adaptadorUbicacion
+            val  adaptadorConteo = ArrayAdapter(this, android.R.layout.simple_spinner_item, conteo)
+            spin_Conteo!!.adapter = adaptadorConteo
+            val fechaVar: EditText = findViewById(R.id.eDate)
+            fechaVar.setText(date[0])
+        }catch (pointError: NullPointerException){
+            Toast.makeText(this,pointError.message.toString(),Toast.LENGTH_LONG).show()
+        }
+
 
     }
 
@@ -294,37 +329,28 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         val  adaptador = ArrayAdapter(this, android.R.layout.simple_spinner_item, list)
         spin_Conteo!!.adapter = adaptador
     }
-    override fun onClick(view: View?){
-        when(view?.id){
-            R.id.btn_CloseSession -> {
-                val alert: AlertDialog.Builder = AlertDialog.Builder(this)
 
-                alert.setMessage("Está seguro desea salir del sistema?").setCancelable(false)
-                    .setPositiveButton("Salir")
-                    { _, _ ->
-                        try {
-                            deleteMainCodigos().execute()
-                            SQLiteFunction._deleteUser(this)
-                            finish()
-                        }catch (liteX : SQLiteException){
-                            Toast.makeText(this@LoadProductsActivity,liteX.message.toString(),Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    .setNegativeButton("No")
-                    { _, _ ->
-                        //Just Close AlertDialog
-                    }
-                val title = alert.create()
-                title.setTitle("Cerrar sesión")
-                title.show()
+    private fun CloseSession(){
+        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
 
+        alert.setMessage("Está seguro desea salir del sistema?").setCancelable(false)
+            .setPositiveButton("Salir")
+            { _, _ ->
+                try {
+                    //deleteMainCodigos().execute()
+                    SQLiteFunction._updateUserNametoNull(this)
+                    finish()
+                }catch (liteX : SQLiteException){
+                    Toast.makeText(this@LoadProductsActivity,liteX.message.toString(),Toast.LENGTH_SHORT).show()
+                }
             }
-            R.id.eDate -> {
-                showDatePickerDialog()
+            .setNegativeButton("No")
+            { _, _ ->
+                //Just Close AlertDialog
             }
-
-        }
-
+        val title = alert.create()
+        title.setTitle("Cerrar sesión")
+        title.show()
     }
 
     internal inner class getRequest : AsyncTask<Void, Void, String>(){
@@ -476,6 +502,7 @@ class LoadProductsActivity : AppCompatActivity(), View.OnClickListener {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if(result == "Completado"){
+
                 Toast.makeText(context,"Carga Completada",Toast.LENGTH_SHORT).show()
                 buttonsBehaviour(false)
                 refreshCantidad()

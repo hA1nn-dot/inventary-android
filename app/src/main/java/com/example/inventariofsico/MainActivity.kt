@@ -29,10 +29,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if(SQLiteFunction.getMainCodigos(this) != "0"){
-            SQLiteFunction.loadUserData(this,usuario)
-            changeActivity()
+        //SQLiteFunction._deleteUsuario(this)
+        //SQLiteFunction._deleteMainCodigos(this)
+        if(SQLiteFunction.isUserExistsInDataBase(this)){
+            if(!SQLiteFunction.isUserNullInDataBase(this)){
+                SQLiteFunction.setUserName(this,usuario)
+                SQLiteFunction.updateUserName(this,usuario)
+                changeActivity()
+            }
         }
 
         setContentView(R.layout.activity_main)
@@ -99,6 +103,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
                 if(username.isNotEmpty() && password.isNotEmpty()){
                         if(SQLfunction.verifyUser(username,password,this)){
                             usuario.setUsuario(username,password,true)
+                            if(SQLiteFunction.isUserExistsInDataBase(this))
+                                SQLiteFunction.updateUserName(this,usuario)
+                            else
+                                SQLiteFunction.createUser(this,usuario)
                         }else
                             throw Exception("Usuario o contraseña errónea, favor de verificar.")
 
