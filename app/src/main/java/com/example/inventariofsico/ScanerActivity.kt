@@ -152,7 +152,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             loadUnitsProduct(barcode)
             id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
             id_producto = SQLiteFunction.getIDProduct(this,barcode)
-            text_descripcion!!.text = productoDescrition
+
             text_cantidad!!.isEnabled = true
             try {
                 if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
@@ -168,9 +168,8 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
 
             text_cantidad!!.requestFocus(1)
 
-        }else{
-            Toast.makeText(this@ScanerActivity, productoDescrition, Toast.LENGTH_SHORT).show()
         }
+        text_descripcion!!.text = productoDescrition
     }
 
     private fun loadUnitsProduct(barcode: String) {
