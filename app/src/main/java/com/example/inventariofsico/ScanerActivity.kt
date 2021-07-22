@@ -39,7 +39,6 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         text_IDProducto = findViewById(R.id.id_productoTxt)
 
         text_codigo!!.requestFocus()
-        text_cantidad!!.isEnabled = false
 
         text_codigo!!.filters += InputFilter.AllCaps()
         setUbicacion()
@@ -160,12 +159,10 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             loadUnitsProduct(barcode)
             id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
             id_producto = SQLiteFunction.getIDProduct(this,barcode)
-
-            text_cantidad!!.isEnabled = true
             try {
                 if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
                     cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
-                text_cantidad!!.setText(cantidadFound)
+
             }catch (liteX: SQLiteException){
                 errorMessage = liteX.message.toString()
             }catch (nullvar: NullPointerException){
@@ -174,9 +171,10 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             if(errorMessage != "")
                 Toast.makeText(this@ScanerActivity, errorMessage, Toast.LENGTH_SHORT).show()
 
-            text_cantidad!!.requestFocus(1)
 
         }
+        text_cantidad!!.setText(cantidadFound)
+        text_cantidad!!.requestFocus(1)
         text_descripcion!!.text = productoDescrition
     }
 
@@ -202,17 +200,33 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         barcode = barcode.replace(" ","")
 
         if(barcode.isNotEmpty() && cant.isNotEmpty()){
-            result = if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
-                SQLiteFunction._updateRegister(this,cant,id_producto,id_unidad)
-            else{
-                SQLiteFunction.guardarCodigo(this,barcode.trim(),cant.trim(),unidadtxt)
+            if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
+                SQLiteFunction._updateProduct(this,cant,id_producto,id_unidad)
+                result = "Cantidad actualizada"
+            }else if(SQLiteFunction.isCodeExists(this,barcode)){
+                SQLiteFunction._updateProduct(this,barcode,cant)
+                result = "Cantidad actualizada"
+            }else{
+                saveBarcode()
+                result = "Código guardado"
             }
             cleanBoxes()
         }else
             result = "Favor de rellenar los espacios vacios"
         Toast.makeText(this@ScanerActivity,result,Toast.LENGTH_SHORT).show()
     }
+    private fun saveBarcode(){
+        val barcode = text_codigo!!.text.toString()
+        val amount = text_cantidad!!.text.toString()
+        val unit = spinnerUnidades!!.selectedItem.toString()
+        if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
+            SQLiteFunction.guardarCodigo(this,barcode,amount,unit)
+        }
+    }
 
+    private fun saveUnknownProduct(){
+
+    }
 
     private fun cleanBoxes(){
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
@@ -226,7 +240,6 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         text_codigo!!.setText("")
         text_codigo!!.requestFocus()
         text_cantidad!!.setText("")
-        text_cantidad!!.isEnabled = false
         text_descripcion!!.text = ""
         text_IDProducto!!.text = ""
         text_IDUnidad!!.text = ""

@@ -70,19 +70,44 @@ class SQLiteFunction {
             }
         }
 
+        fun isCodeExists(context: Context, barcode: String): Boolean{
+            var status = false
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT * FROM codigos where codigo = $barcode",null)
+                if(fila.moveToFirst())
+                    status = true
+                fila.close()
+                db.close()
+                return status
+            }catch (liteX: SQLiteException){
+                throw SQLiteException("Error SQLite: "+liteX.message.toString())
+            }
+        }
 
-        fun _updateRegister(context: Context,cantidad: String,id_producto: Int,id_unidad: Int): String{
-            return try {
+
+        fun _updateProduct(context: Context,cantidad: String,id_producto: Int,id_unidad: Int){
+            try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
                 val values = ContentValues()
                 values.put("cantidad",cantidad.toInt())
                 val args = arrayOf(id_producto.toString(),id_unidad.toString())
                 db.update("codigos",values,"id_producto=? AND id_unidad=?",args)
-                "Cantidad actualizada"
+
             }catch (liteX: SQLiteException){
-                "Error SQLite: "+liteX.message.toString()
+                throw liteX
             }
+        }
+
+        fun _updateProduct(context: Context, barcode: String, cantidad: String){
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                val values = ContentValues()
+                values.put("cantidad",cantidad.toInt())
+                val args = arrayOf(barcode)
+                db.update("codigos",values,"codigo=?",args)
         }
 
         fun getMainCodigos(context:Context): String{
@@ -132,8 +157,8 @@ class SQLiteFunction {
         }
 
 
-        fun guardarCodigo(context: Context, barcode: String,cantidad: String,unidadtxt: String): String{
-            return try {
+        fun guardarCodigo(context: Context, barcode: String,cantidad: String,unidadtxt: String){
+            try {
                 val id_unidad = getIDUnidad(context, unidadtxt)
                 val id_producto = getIDProduct(context, barcode)
                 val id_ubicacion = getUbicacion(context)
@@ -150,20 +175,12 @@ class SQLiteFunction {
                 registro.put("subido", 1)
                 db.insert("codigos",null,registro)
                 db.close()
-                val state = "Product: "+ barcode + "\n" +
-                        " id_producto :"+ id_producto + " \n" +
-                        "Unidad: "+ unidadtxt + "\n" +
-                        " id_unidad " + id_unidad + "\n" +
-                        " id_ubicacion " + id_ubicacion + "\n" +
-                        " Fecha: " + fecha_captura
-
-                 "Código guardado"
             }catch (liteX: SQLiteException){
-                liteX.message.toString()
+                throw  liteX
             }catch (nullex: NullPointerException){
-                nullex.message.toString()
+                throw nullex
             }catch (algo: Exception){
-                algo.message.toString()
+                throw algo
             }
 
         }
