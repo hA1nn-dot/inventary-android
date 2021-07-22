@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
         super.onCreate(savedInstanceState)
         //SQLiteFunction._deleteUsuario(this)
         //SQLiteFunction._deleteMainCodigos(this)
+        //SQLiteFunction._deleteCodes(this)
         if(SQLiteFunction.isUserExistsInDataBase(this)){
             if(!SQLiteFunction.isUserNullInDataBase(this)){
                 SQLiteFunction.setUserName(this,usuario)

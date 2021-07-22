@@ -45,7 +45,7 @@ open class SQLiteFunction {
 
 
         }
-        private fun getUbicacion(context: Context,id_producto: Int,id_unidad: Int): Int{
+        fun getUbicacion(context: Context,id_producto: Int,id_unidad: Int): Int{
             try {
                 var id_ubicacion = 0
                 val admin = SQLiteConnection(context,"administracion",null,1)
@@ -71,15 +71,14 @@ open class SQLiteFunction {
             }
         }
 
-        fun isCodeExists(context: Context, id_unidad: Int,id_producto: Int): Boolean{
+        fun isCodeExistsinCodesTableById(context: Context, id_unidad: Int,id_producto: Int): Boolean{
             var status = false
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.readableDatabase
                 val fila = db.rawQuery("SELECT * FROM codigos where id_producto = $id_producto AND id_unidad = $id_unidad",null)
-                if(fila.moveToFirst())
+                if(fila.count != 0)
                     status = true
-
                 fila.close()
                 db.close()
                 return status
@@ -88,13 +87,29 @@ open class SQLiteFunction {
             }
         }
 
-        fun isCodeExists(context: Context, barcode: String): Boolean{
+        fun isCodeExistsInMainCodesTableById(context: Context, id_unidad: Int,id_producto: Int): Boolean{
+            var status = false
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT * FROM mainCodigos where id_producto = $id_producto AND id_unidad = $id_unidad",null)
+                if(fila.count != 0)
+                    status = true
+                fila.close()
+                db.close()
+                return status
+            }catch (liteX: SQLiteException){
+                throw SQLiteException("Error SQLite: "+liteX.message.toString())
+            }
+        }
+
+        fun isCodeExistsInCodesTableByBarcode(context: Context, barcode: String): Boolean{
             var status = false
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.readableDatabase
                 val fila = db.rawQuery("SELECT * FROM codigos where codigo = '$barcode'",null)
-                if(fila.moveToFirst())
+                if(fila.count != 0)
                     status = true
                 fila.close()
                 db.close()
@@ -175,21 +190,17 @@ open class SQLiteFunction {
         }
 
 
-        fun guardarCodigo(context: Context, barcode: String,cantidad: String,unidadtxt: String){
+        fun guardarCodigo(context: Context, product: Product){
             try {
-                val id_unidad = getIDUnidad(context, unidadtxt)
-                val id_producto = getIDProduct(context, barcode)
-                val id_ubicacion = getUbicacion(context, id_producto,id_unidad)
-                val fecha_captura = getFecha(context)
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
                 val registro = ContentValues()
-                registro.put("codigo",barcode)
-                registro.put("cantidad",cantidad.toInt())
-                registro.put("fecha_cap",fecha_captura)
-                registro.put("id_producto",id_producto)
-                registro.put("id_ubicacion",id_ubicacion)
-                registro.put("id_unidad", id_unidad)
+                registro.put("codigo",product.getBarcode())
+                registro.put("cantidad",product.getCantidad())
+                registro.put("fecha_cap",product.getDate())
+                registro.put("id_producto",product.getIdProduct())
+                registro.put("id_ubicacion",product.getIdUbication())
+                registro.put("id_unidad", product.getIdUnit())
                 registro.put("subido", 1)
                 db.insert("codigos",null,registro)
                 db.close()
@@ -203,32 +214,8 @@ open class SQLiteFunction {
 
         }
 
-        fun guardarCodigo(context: Context, barcode: String,cantidad: String){
-            try {
-                val fecha_captura = getFecha(context)
-                val admin = SQLiteConnection(context,"administracion",null,1)
-                val db = admin.writableDatabase
-                val registro = ContentValues()
-                registro.put("codigo",barcode)
-                registro.put("cantidad",cantidad.toInt())
-                registro.put("fecha_cap",fecha_captura)
-                registro.put("id_producto",0)
-                registro.put("id_ubicacion",0)
-                registro.put("id_unidad", 0)
-                registro.put("subido", 1)
-                db.insert("codigos",null,registro)
-                db.close()
-            }catch (liteX: SQLiteException){
-                throw  liteX
-            }catch (nullex: NullPointerException){
-                throw nullex
-            }catch (algo: Exception){
-                throw algo
-            }
 
-        }
-
-        private fun getFecha(context: Context): String{
+        fun getFecha(context: Context): String{
             var fechaget = ""
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
@@ -262,6 +249,18 @@ open class SQLiteFunction {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
                 db.execSQL("DELETE FROM mainCodigos")
+                db.close()
+            }catch (sqlexc: SQLException){
+                return "Error: "+sqlexc.message.toString()
+            }
+            return "Completado"
+        }
+
+        fun _deleteCodes(context: Context): String{
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                db.execSQL("DELETE FROM codigos")
                 db.close()
             }catch (sqlexc: SQLException){
                 return "Error: "+sqlexc.message.toString()
@@ -463,27 +462,48 @@ open class SQLiteFunction {
             db.close()
         }
 
-        fun isPersonalTableInformationCompleted(context: Context): Boolean{
-            val admin = SQLiteConnection(context,"administracion",null,1)
-            val db = admin.writableDatabase
-            val c = db.rawQuery("select * from personal",null)
-            if(c.moveToFirst()){
-                if(c.getString(c.getColumnIndex("usuario")) != ""
-                    && c.getString(c.getColumnIndex("almacen")) != ""
-                    && c.getString(c.getColumnIndex("ubicacion")) != ""
-                    && c.getString(c.getColumnIndex("conteo")) != ""
-                    && c.getString(c.getColumnIndex("fecha")) != ""){
-                    db.close()
-                    c.close()
-                    return true
-                }
+        fun insertProduct(context: Context,product: Product){
+            try {
+
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                val row = ContentValues()
+                row.put("codigo",product.getBarcode())
+                row.put("cantidad",product.getCantidad())
+                row.put("fecha_cap",product.getDate())
+                row.put("id_producto",product.getIdProduct())
+                row.put("id_ubicacion",product.getIdUbication())
+                row.put("id_unidad", product.getIdUnit())
+                row.put("subido", 1)
+                db.insert("codigos",null,row)
+                db.close()
+            }catch (liteX: SQLiteException){
+                throw  liteX
+            }catch (nullex: NullPointerException){
+                throw nullex
+            }catch (algo: Exception){
+                throw algo
             }
-            db.close()
-            c.close()
-            return false
         }
 
+        fun updateProduct(context: Context,product: Product){
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                val values = ContentValues()
+                values.put("cantidad",product.getCantidad())
+                if(product.getIdProduct() != 0 && product.getIdUnit() != 0){
+                    val args = arrayOf(product.getIdProduct().toString(),product.getIdUnit().toString())
+                    db.update("codigos",values,"id_producto=? AND id_unidad=?",args)
+                }else{
+                    val args = arrayOf(product.getBarcode())
+                    db.update("codigos",values,"codigo=?",args)
+                }
 
 
+            }catch (liteX: SQLiteException){
+                throw liteX
+            }
+        }
     }
 }
