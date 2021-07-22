@@ -187,7 +187,7 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
             }
             .setNegativeButton("No")
             { _, _ ->
-                cleanBoxes(
+                cleanBoxes()
             }
         val title = alert.create()
         title.setTitle("Producto no encontrado")
