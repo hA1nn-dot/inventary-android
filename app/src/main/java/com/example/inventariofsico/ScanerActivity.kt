@@ -9,7 +9,7 @@ import android.widget.*
 import org.w3c.dom.Text
 import java.lang.NullPointerException
 
-class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
+class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     private var text_codigo: EditText? = null
     private var text_cantidad: EditText? = null
     private var btnGuardar: Button? = null
@@ -44,7 +44,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         setUbicacion()
         val listCleaned = listOf("<Cargue producto>")
         val  adapterUnidad = ArrayAdapter(
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listCleaned
         )
@@ -101,7 +101,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             errorMessage = nullvar.message.toString()
         }
         if(errorMessage != "")
-            Toast.makeText(this@ScanerActivity, errorMessage, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@ScannerActivity, errorMessage, Toast.LENGTH_SHORT).show()
         text_cantidad!!.requestFocus(cantidadFound.length)
 
     }
@@ -169,7 +169,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
                 errorMessage = nullvar.message.toString()
             }
             if(errorMessage != "")
-                Toast.makeText(this@ScanerActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ScannerActivity, errorMessage, Toast.LENGTH_SHORT).show()
 
 
         }
@@ -182,7 +182,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
         val listUnidades = SQLiteFunction.getUnidades(this,barcode)
         val  adapterUnidad = ArrayAdapter(              //Load list of unidades
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listUnidades
         )
@@ -213,7 +213,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             cleanBoxes()
         }else
             result = "Favor de rellenar los espacios vacios"
-        Toast.makeText(this@ScanerActivity,result,Toast.LENGTH_SHORT).show()
+        Toast.makeText(this@ScannerActivity,result,Toast.LENGTH_SHORT).show()
     }
     private fun saveBarcode(){
         val barcode = text_codigo!!.text.toString()
@@ -232,7 +232,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
         val listCleaned = listOf("<Cargue producto>")
         val  adapterUnidad = ArrayAdapter(
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listCleaned
         )

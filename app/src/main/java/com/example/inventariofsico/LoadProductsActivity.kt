@@ -298,7 +298,7 @@ class LoadProductsActivity : AppCompatActivity() {
 
     private fun changeActivity(){
         try {
-            val intentvar = Intent(this@LoadProductsActivity, ScanerActivity::class.java)
+            val intentvar = Intent(this@LoadProductsActivity, ScannerActivity::class.java)
             intentvar.putExtra("ubicacionSeleccionada",spin_Ubicaciones!!.selectedItem.toString())
             startActivity(intentvar)
         }catch (exp: InstantiationException){
@@ -517,34 +517,6 @@ class LoadProductsActivity : AppCompatActivity() {
         cantidadTxtView!!.text = "Cantidad: $productos_cantidad"
         cantidadLectorTxtView!!.text = "Cantidad lector: $productos_lector"
 
-    }
-
-    internal inner class deleteMainCodigos : AsyncTask<Void, Void, String>(){
-        override fun onPreExecute() {
-            super.onPreExecute()
-            loading!!.visibility = View.VISIBLE
-        }
-
-        override fun doInBackground(vararg p0: Void?): String? {
-            val message = SQLiteFunction._deleteMainCodigos(this@LoadProductsActivity)
-            val message2 = SQLiteFunction._deleteUsuario(this@LoadProductsActivity)
-            productos_cantidad = SQLiteFunction.getMainCodigos(this@LoadProductsActivity)
-            SQLiteFunction._clearLectorDataBase(this@LoadProductsActivity)
-            if(message == "Completado" && message2 == "Completado")
-                return message
-            return "Resultado incompleto"
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            if(result == "Completado") {
-                refreshCantidad()
-                Toast.makeText(this@LoadProductsActivity, "Se han borrado los registros", Toast.LENGTH_SHORT)
-                    .show()
-            }else
-                Toast.makeText(this@LoadProductsActivity,result,Toast.LENGTH_SHORT).show()
-            loading!!.visibility = View.INVISIBLE
-        }
     }
 
     private fun showDatePickerDialog() {
