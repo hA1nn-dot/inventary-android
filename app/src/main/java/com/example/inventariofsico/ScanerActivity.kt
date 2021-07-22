@@ -170,10 +170,18 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
             }
             if(errorMessage != "")
                 Toast.makeText(this@ScannerActivity, errorMessage, Toast.LENGTH_SHORT).show()
+        }else{
+            cantidadFound = searchUnknownProductInCodesTable()
         }
         text_cantidad!!.setText(cantidadFound)
         text_cantidad!!.requestFocus(1)
         text_descripcion!!.text = productoDescrition
+    }
+
+    private fun searchUnknownProductInCodesTable():String{
+        val barcode = text_codigo!!.text.toString()
+        val cantidad = SQLiteFunction.getCantidad(this,barcode)
+        return cantidad.toString()
     }
 
     private fun showAlertDialogIfAddUnknownProduct(){
@@ -247,7 +255,9 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     }
 
     private fun saveUnknownProduct(){
-
+        val barcode = text_codigo!!.text.toString()
+        val amount = text_cantidad!!.text.toString()
+        SQLiteFunction.guardarCodigo(this,barcode,amount)
     }
 
     private fun cleanBoxes(){

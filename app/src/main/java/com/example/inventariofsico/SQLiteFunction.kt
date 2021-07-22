@@ -8,6 +8,24 @@ import java.sql.SQLException
 
 open class SQLiteFunction {
     companion object{
+        fun getCantidad(context: Context, barcode: String): Int{
+            try {
+                var cantidad = 1
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT cantidad FROM codigos where codigo = '$barcode'",null)
+                if(fila.moveToFirst())
+                    cantidad = fila.getInt(fila.getColumnIndex("cantidad"))
+                fila.close()
+                db.close()
+                return cantidad
+            }catch (sqlexc: SQLiteException){
+                throw SQLiteException("Problemas con SQLite: "+sqlexc.message.toString())
+            }catch (nullvar: NullPointerException){
+                throw NullPointerException("Null exception: "+nullvar.message.toString())
+            }
+        }
+
         fun getCantidad(context: Context, id_producto: String,id_unidad: String): String{
             try {
                 var cantidad = "1"
@@ -27,12 +45,12 @@ open class SQLiteFunction {
 
 
         }
-        private fun getUbicacion(context: Context): Int{
+        private fun getUbicacion(context: Context,id_producto: Int,id_unidad: Int): Int{
             try {
                 var id_ubicacion = 0
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.readableDatabase
-                val cursor: Cursor = db.rawQuery("SELECT DISTINCT id_ubicacion FROM mainCodigos",null)
+                val cursor: Cursor = db.rawQuery("SELECT id_ubicacion FROM mainCodigos where id_producto = $id_producto AND id_unidad = $id_unidad",null)
                 if(cursor.moveToFirst())
                     id_ubicacion = cursor.getInt(0)
                 cursor.close()
@@ -161,7 +179,7 @@ open class SQLiteFunction {
             try {
                 val id_unidad = getIDUnidad(context, unidadtxt)
                 val id_producto = getIDProduct(context, barcode)
-                val id_ubicacion = getUbicacion(context)
+                val id_ubicacion = getUbicacion(context, id_producto,id_unidad)
                 val fecha_captura = getFecha(context)
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.writableDatabase
@@ -172,6 +190,31 @@ open class SQLiteFunction {
                 registro.put("id_producto",id_producto)
                 registro.put("id_ubicacion",id_ubicacion)
                 registro.put("id_unidad", id_unidad)
+                registro.put("subido", 1)
+                db.insert("codigos",null,registro)
+                db.close()
+            }catch (liteX: SQLiteException){
+                throw  liteX
+            }catch (nullex: NullPointerException){
+                throw nullex
+            }catch (algo: Exception){
+                throw algo
+            }
+
+        }
+
+        fun guardarCodigo(context: Context, barcode: String,cantidad: String){
+            try {
+                val fecha_captura = getFecha(context)
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.writableDatabase
+                val registro = ContentValues()
+                registro.put("codigo",barcode)
+                registro.put("cantidad",cantidad.toInt())
+                registro.put("fecha_cap",fecha_captura)
+                registro.put("id_producto",0)
+                registro.put("id_ubicacion",0)
+                registro.put("id_unidad", 0)
                 registro.put("subido", 1)
                 db.insert("codigos",null,registro)
                 db.close()
@@ -439,6 +482,7 @@ open class SQLiteFunction {
             c.close()
             return false
         }
+
 
 
     }

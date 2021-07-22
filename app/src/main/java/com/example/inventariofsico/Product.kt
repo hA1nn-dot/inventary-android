@@ -15,6 +15,7 @@ class Product : SQLiteFunction() {
     private var idUnit = 0
     private var idAlmacen = 0
 
+    private var product: Product? = null
 
     fun setBarCode(_barcode: String){
         barcode = cleanField(_barcode) ?: ""
@@ -50,6 +51,8 @@ class Product : SQLiteFunction() {
     }
 
     companion object{
+
+
         private fun findIdsProduct(context: Context, product: Product){
             product.setIdProduct(getIDProduct(context,product.getBarcode()))
             product.setIdUnit(getIDUnidad(context,product.getUnitText()))
