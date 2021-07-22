@@ -89,25 +89,8 @@ class LoadProductsActivity : AppCompatActivity() {
             showDatePickerDialog()
         }
         btn_Send!!.setOnClickListener {
-            val alert: AlertDialog.Builder = AlertDialog.Builder(this)
-            productos_lector = SQLiteFunction.countCodigos(this@LoadProductsActivity)
-            alert.setMessage("Esta seguro de enviar los $productos_lector productos al sistema?").setCancelable(false)
-                .setPositiveButton("Enviar")
-                { _, _ ->
-                    sendData_SQliteToSQLServer()
-                }
-                .setNegativeButton("No")
-                { _, _ ->
-                    //Just Close AlertDialog
-                }
-            val title = alert.create()
-            title.setTitle("Envio de datos")
-            title.show()
+            showAlertDialogToSendAllProductsToServer()
         }
-
-
-
-
 
         spin_Almacenes!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, id: Long) {
@@ -125,6 +108,22 @@ class LoadProductsActivity : AppCompatActivity() {
 
     }
 
+    private fun showAlertDialogToSendAllProductsToServer(){
+        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
+        productos_lector = SQLiteFunction.countCodigos(this)
+        alert.setMessage("Esta seguro de enviar los $productos_lector productos al sistema?").setCancelable(false)
+            .setPositiveButton("Enviar")
+            { _, _ ->
+                sendData_SQliteToSQLServer()
+            }
+            .setNegativeButton("No")
+            { _, _ ->
+                //Close AlertDialog
+            }
+        val title = alert.create()
+        title.setTitle("Envio de datos")
+        title.show()
+    }
 
     private fun setUserInfo(){
         try {
@@ -246,7 +245,6 @@ class LoadProductsActivity : AppCompatActivity() {
         val conteo = spin_Conteo!!.selectedItem.toString()
         var message = ""
         if(usuario != null){
-
             try {
                 val registers = SQLiteFunction._sendRegisterstoServer(this,conteo,usuario!!)
                 if(!registers.isNullOrEmpty()){

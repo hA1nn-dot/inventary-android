@@ -6,7 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import java.sql.SQLException
 
-class SQLiteFunction {
+open class SQLiteFunction {
     companion object{
         fun getCantidad(context: Context, id_producto: String,id_unidad: String): String{
             try {
@@ -75,7 +75,7 @@ class SQLiteFunction {
             try {
                 val admin = SQLiteConnection(context,"administracion",null,1)
                 val db = admin.readableDatabase
-                val fila = db.rawQuery("SELECT * FROM codigos where codigo = $barcode",null)
+                val fila = db.rawQuery("SELECT * FROM codigos where codigo = '$barcode'",null)
                 if(fila.moveToFirst())
                     status = true
                 fila.close()
