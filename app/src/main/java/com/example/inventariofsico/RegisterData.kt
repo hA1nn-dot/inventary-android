@@ -7,6 +7,7 @@ class RegisterData : Usuario() {
     private var cant: Int? = null
     private var fecha: String? = null
     private var conteo: String? = null
+    private var barcode: String = ""
     fun set_Id_Unidad(_id_unidad: Int){
         id_unidad = _id_unidad
     }
@@ -24,6 +25,9 @@ class RegisterData : Usuario() {
     }
     fun set_Conteo(_conteo: String){
         conteo = _conteo
+    }
+    fun setBarcode(_barcode: String){
+        barcode = _barcode
     }
 
     fun get_Id_Unidad(): Int? {
@@ -43,6 +47,9 @@ class RegisterData : Usuario() {
     }
     fun get_Conteo(): String?{
         return conteo
+    }
+    fun getBarcode():String{
+        return barcode
     }
 
 }

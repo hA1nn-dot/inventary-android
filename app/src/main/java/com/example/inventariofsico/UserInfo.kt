@@ -91,5 +91,17 @@ class UserInfo {
             db.close()
 
         }
+
+        fun getAlmacenName(context: Context):String{
+            var almacenName = ""
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val fila = db.rawQuery("SELECT almacen FROM personal",null)
+            if(fila.moveToFirst())
+                almacenName = fila.getString(fila.getColumnIndex("almacen"))
+            fila.close()
+            db.close()
+            return almacenName
+        }
     }
 }

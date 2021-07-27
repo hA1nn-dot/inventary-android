@@ -83,8 +83,14 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     private fun NullFieldsExists(): Boolean{
         val barcode = text_codigo!!.text.toString()
         val amount = text_cantidad!!.text.toString()
-        if(barcode.isNullOrEmpty() || amount.isNullOrEmpty())
+        if(barcode.isNullOrEmpty()){
+            printMessageByToast("Ingrese un código de barras o la clave del producto")
             return true
+        }else if(amount.isNullOrEmpty()){
+            printMessageByToast("Ingrese una cantidad")
+            return true
+        }
+
         return false
     }
 
@@ -141,6 +147,7 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
                         if(keycode == KeyEvent.KEYCODE_ENTER){
                             if(text_cantidad!!.text.toString() != "0"){
                                 guardarCodigo()
+                                cleanBoxes()
                             }
 
                         }
@@ -155,10 +162,9 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     private fun searchCode(barcode: String){
         var errorMessage = ""
         var cantidadFound = "1"
-
+        loadUnitsProduct(barcode)
         val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)
         if(productoDescrition != "Producto no encontrado"){
-            loadUnitsProduct(barcode)
             id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
             id_producto = SQLiteFunction.getIDProduct(this,barcode)
             try {
@@ -175,6 +181,7 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
 
             cantidadFound = searchUnknownProductInCodesTable()
         }
+
         text_cantidad!!.setText(cantidadFound)
         text_cantidad!!.requestFocus(1)
         text_descripcion!!.text = productoDescrition
@@ -189,13 +196,15 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     private fun showAlertDialogIfAddUnknownProduct(product: Product){
         val alert: AlertDialog.Builder = AlertDialog.Builder(this)
         alert.setMessage("¿Seguro que desea guardar este producto?").setCancelable(false)
-            .setPositiveButton("Enviar")
+            .setPositiveButton("Guardar")
             { _, _ ->
                 SQLiteFunction.insertProduct(this,product)
+                printMessageByToast("Producto Guardado")
                 cleanBoxes()
             }
             .setNegativeButton("No")
             { _, _ ->
+                printMessageByToast("Producto Cancelado")
                 cleanBoxes()
             }
         val title = alert.create()
@@ -209,7 +218,10 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
 
     private fun loadUnitsProduct(barcode: String) {
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
-        val listUnidades = SQLiteFunction.getUnidades(this,barcode)
+        var listUnidades = SQLiteFunction.getUnidades(this,barcode)
+        if(listUnidades.count() == 0){
+            listUnidades = listOf("<Cargue producto>")
+        }
         val  adapterUnidad = ArrayAdapter(              //Load list of unidades
             this@ScannerActivity,
             android.R.layout.simple_spinner_item,
@@ -229,23 +241,22 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
         product.setDate(context)
 
         if(product.isInCodesTable(context)){
+            if(product.getCantidad() == 0){
+                SQLiteFunction.deleteProductFromCodesTable(context,product)
+                printMessageByToast("Producto Eliminado")
+                return
+            }
             SQLiteFunction.updateProduct(this,product)
             printMessageByToast("Producto Actualizado")
             return
         }
         else if(product.isExistsInMainCodesTable(context)){
             SQLiteFunction.insertProduct(context,product)
-            printMessageByToast("El producto se ha guardado")
+            printMessageByToast("Producto Guardado")
             return
         }else{
             showAlertDialogIfAddUnknownProduct(product)
-            printMessageByToast("Unknown product Adding...")
         }
-        printMessageByToast(
-            "Barcode: "+product.getBarcode()+" ID: ${product.getIdProduct()}\n"+
-            "Unit: "+product.getUnitText()+" ID: ${product.getIdUnit()}\n"+
-                    "ubication: "+product.getIdUbication()+"\n Date: ${product.getDate()}"
-        )
     }
 
     private fun cleanBoxes(){

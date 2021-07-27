@@ -164,6 +164,7 @@ open class SQLiteFunction {
                 val c: Cursor = bd.rawQuery("select * from codigos where subido = 1", null)
                 while(c.moveToNext()){
                     val register = RegisterData()
+                    register.setBarcode(c.getString(c.getColumnIndex("codigo")))
                     register.set_Id_Producto(c.getInt(c.getColumnIndex("id_producto")))
                     register.set_Id_Unidad( c.getInt(c.getColumnIndex("id_unidad")))
                     register.set_Id_Ubicacion(c.getInt(c.getColumnIndex("id_ubicacion")))
@@ -232,7 +233,7 @@ open class SQLiteFunction {
             return fechaget
         }
 
-        fun countCodigos(context:Context): String{
+        fun countCodigos(context:Context): Int{
             var contador = 0
             val admin = SQLiteConnection(context,"administracion",null,1)
             val bd = admin.readableDatabase
@@ -241,7 +242,7 @@ open class SQLiteFunction {
                 contador++
             c.close()
             bd.close()
-            return contador.toString()
+            return contador
         }
 
         fun _deleteMainCodigos(context: Context): String{
@@ -406,9 +407,12 @@ open class SQLiteFunction {
                 val args = arrayOf(product.get_Id_Producto().toString(),
                     product.get_Id_Unidad().toString(),
                     product.get_Id_Ubicacion().toString())
-                db.update("codigos",values,"id_producto=? AND id_unidad=? AND id_ubicacion =?",args)
-                "Cantidad actualizada"
-
+                if(product.get_Id_Producto() == 0 && product.get_Id_Unidad() == 0){
+                    db.update("codigos",values,"codigo=?", arrayOf(product.getBarcode()))
+                }else {
+                    db.update("codigos",values,"id_producto=? AND id_unidad=? AND id_ubicacion =?",args)
+                    "Cantidad actualizada"
+                }
             }catch (liteError: SQLiteException){
                 throw liteError
             }
@@ -504,6 +508,15 @@ open class SQLiteFunction {
             }catch (liteX: SQLiteException){
                 throw liteX
             }
+        }
+        fun deleteProductFromCodesTable(context: Context,product: Product){
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            if(product.getIdProduct() == 0 && product.getIdUnit() == 0){
+                db.execSQL("DELETE FROM codigos WHERE codigo = '${product.getBarcode()}'")
+            }else
+                db.execSQL("DELETE FROM codigos WHERE id_producto = ${product.getIdProduct()} AND id_unidad = ${product.getIdUnit()}")
+            db.close()
         }
     }
 }

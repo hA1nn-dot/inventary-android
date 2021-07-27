@@ -30,7 +30,7 @@ class LoadProductsActivity : AppCompatActivity() {
     private var loading: ProgressBar? = null
     private var usuario: Usuario? = null
     private var productos_cantidad: String = "0"
-    private var productos_lector: String = "0"
+    private var productos_lector: Int = 0
     private var cantidadTxtView: TextView? = null
     private var cantidadLectorTxtView: TextView? = null
     private var almacenSeleccionado: String? = null
@@ -90,6 +90,7 @@ class LoadProductsActivity : AppCompatActivity() {
         }
         btn_Send!!.setOnClickListener {
             showAlertDialogToSendAllProductsToServer()
+            refreshCantidad()
         }
 
         spin_Almacenes!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
@@ -108,6 +109,20 @@ class LoadProductsActivity : AppCompatActivity() {
 
     }
 
+    private fun deleteProducts(){
+        val context = this
+        if(SQLiteFunction.countCodigos(context) == 0){
+            buttonsBehaviour(true)
+            SQLiteFunction._deleteMainCodigos(context)
+            SQLiteFunction._deleteCodes(context)
+            almacenList = null
+            ubicacionList = null
+            almacenSeleccionado = null
+        }else{
+            Toast.makeText(context,"No todos los productos se han subido, vuelva a subir de nuevo",Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun showAlertDialogToSendAllProductsToServer(){
         val alert: AlertDialog.Builder = AlertDialog.Builder(this)
         productos_lector = SQLiteFunction.countCodigos(this)
@@ -115,6 +130,7 @@ class LoadProductsActivity : AppCompatActivity() {
             .setPositiveButton("Enviar")
             { _, _ ->
                 sendData_SQliteToSQLServer()
+
             }
             .setNegativeButton("No")
             { _, _ ->
@@ -158,21 +174,15 @@ class LoadProductsActivity : AppCompatActivity() {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             btn_Send!!.isEnabled = true
-            loading!!.visibility = View.INVISIBLE
-
-            if(result.equals("Descarga completada")){
-                if(SQLiteFunction.countCodigos(context) == "0"){
-                    buttonsBehaviour(true)
-                    SQLiteFunction._deleteMainCodigos(context)
-                    SQLiteFunction._clearLectorDataBase(context)
-                    refreshCantidad()
-                }else{
-                    Toast.makeText(context,"No todos los productos se han subido, vuelva a subir de nuevo",Toast.LENGTH_SHORT).show()
-                    refreshCantidad()
-                }
+            if(result == "Descarga completada"){
+                deleteProducts()
+                getRequest().execute()
+                loadConteo()
             }
-            Toast.makeText(context,result,Toast.LENGTH_SHORT).show()
             refreshCantidad()
+            loading!!.visibility = View.INVISIBLE
+            Toast.makeText(context,result,Toast.LENGTH_SHORT).show()
+
         }
 
         override fun doInBackground(vararg p0: Void?): String {
@@ -183,6 +193,14 @@ class LoadProductsActivity : AppCompatActivity() {
                 registers.forEach {
                     val connection = SQLServerConnection.getConnection(context)
                     if (connection != null) {
+                        if(it.get_Id_Producto() == 0 && it.get_Id_Ubicacion() == 0 && it.get_Id_Ubicacion() == 0){
+                            val idFoundProduct = SQLfunction.searchIdProduct(context,it)
+                            if(idFoundProduct.count() != 0){
+                                it.set_Id_Producto(idFoundProduct["idProduct"]?: 0)
+                                it.set_Id_Ubicacion(idFoundProduct["idUbication"]?: 0)
+                                it.set_Id_Unidad(idFoundProduct["idUnit"]?:0)
+                            }
+                        }
                         val conteoSQL = SQLfunction.getCurrentConteo(
                             it.get_Conteo(),
                             it.get_Id_Producto(),
@@ -435,11 +453,8 @@ class LoadProductsActivity : AppCompatActivity() {
             }else{
                 Toast.makeText(this@LoadProductsActivity,"No hay elementos el Ubicaciones",Toast.LENGTH_SHORT).show()
             }
-
             loading!!.visibility = View.INVISIBLE
-
         }
-
     }
 
     internal inner class loadDataSQLite : AsyncTask<Void, Void, String>(){
@@ -461,6 +476,9 @@ class LoadProductsActivity : AppCompatActivity() {
                     ubicationRioVerdeList!!.forEach{
                         val ubicationID = SQLfunction.getIDUbicacion(it,context)
                         resultCodigos = SQLfunction.getBarcodes(ubicationID,dateSelected,context)
+                        //Comprobar si es la misma cantidad
+                        //val countProduct = SQLfunction.getCountProductFromServer(context,dateSelected,ubicationID)
+                        //if(SQLiteFunction.getMainCodigos(context).toInt() == countProduct)
                         if (resultCodigos != "Completado") return resultCodigos
                     }
                     val resultUsuario = loadUser()
@@ -477,8 +495,7 @@ class LoadProductsActivity : AppCompatActivity() {
                     }
                     if (!dateSelected.isNullOrEmpty()) {
                         if (SQLfunction.isInventaryExist(dateSelected, context)) {
-                            resultCodigos =
-                                SQLfunction.getBarcodes(id_ubicacion, dateSelected, context)
+                            resultCodigos = SQLfunction.getBarcodes(id_ubicacion, dateSelected, context)
                             val resultUsuario = loadUser()
                             productos_cantidad = SQLiteFunction.getMainCodigos(context)
                             if (resultCodigos != "Completado") return resultCodigos
@@ -534,6 +551,9 @@ class LoadProductsActivity : AppCompatActivity() {
         else if(day < 10)
             formatDate = "$year-$month-0$day"
         fechaVar.setText(formatDate)
+    }
+    fun printMessageByToast(message: String){
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
 }
