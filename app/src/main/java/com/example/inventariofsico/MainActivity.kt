@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //SQLiteFunction._deleteUsuario(this)
-        SQLiteFunction._deleteMainCodigos(this)
+        //SQLiteFunction._deleteMainCodigos(this)
         //SQLiteFunction._deleteCodes(this)
         if(SQLiteFunction.isUserExistsInDataBase(this)){
             if(!SQLiteFunction.isUserNullInDataBase(this)){
