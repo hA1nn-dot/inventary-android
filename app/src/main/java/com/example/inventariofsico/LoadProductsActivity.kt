@@ -19,7 +19,7 @@ import java.sql.Statement
 
 class LoadProductsActivity : AppCompatActivity() {
 
-    private var spin_Almacenes: Spinner? = null
+    private var spinAlmacenes: Spinner? = null
     private var spin_Ubicaciones: Spinner? = null
     private var spin_Conteo: Spinner? = null
     private var btnLoadProducts: Button? = null
@@ -48,7 +48,7 @@ class LoadProductsActivity : AppCompatActivity() {
         val title: TextView = findViewById(R.id.titulo)
 
         btnLoadProducts = findViewById(R.id.btn_CargarDatos)
-        spin_Almacenes = findViewById(R.id.spinnerAlmacenes)
+        spinAlmacenes = findViewById(R.id.spinnerAlmacenes)
         spin_Ubicaciones = findViewById(R.id.spinnerUbicaciones)
         spin_Conteo = findViewById(R.id.spinnerConteo)
         fecha = findViewById(R.id.eDate)
@@ -81,7 +81,7 @@ class LoadProductsActivity : AppCompatActivity() {
             changeActivity()
         }
         btnCloseSession!!.setOnClickListener {
-            CloseSession()
+            closeSession()
         }
         dateEditText!!.setOnClickListener{
             showDatePickerDialog()
@@ -91,12 +91,12 @@ class LoadProductsActivity : AppCompatActivity() {
             refreshCantidad()
         }
 
-        spin_Almacenes!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        spinAlmacenes!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, id: Long) {
                 if(almacenSeleccionado == null){
-                    almacenSeleccionado = spin_Almacenes!!.selectedItem.toString()
-                }else if(almacenSeleccionado != spin_Almacenes!!.selectedItem.toString()){
-                    almacenSeleccionado = spin_Almacenes!!.selectedItem.toString()
+                    almacenSeleccionado = spinAlmacenes!!.selectedItem.toString()
+                }else if(almacenSeleccionado != spinAlmacenes!!.selectedItem.toString()){
+                    almacenSeleccionado = spinAlmacenes!!.selectedItem.toString()
                     getRequest().execute()
                 }
             }
@@ -141,7 +141,7 @@ class LoadProductsActivity : AppCompatActivity() {
 
     private fun setUserInfo(){
         try {
-            val almacenSelected = spin_Almacenes!!.selectedItem.toString()
+            val almacenSelected = spinAlmacenes!!.selectedItem.toString()
             val ubicationSelected = spin_Ubicaciones!!.selectedItem.toString()
             val fechaEditText: EditText = findViewById(R.id.eDate)
             val date: String = fechaEditText.text.toString()
@@ -282,7 +282,7 @@ class LoadProductsActivity : AppCompatActivity() {
     }
 
     private fun buttonsBehaviour(status: Boolean){
-        spin_Almacenes!!.isEnabled = status
+        spinAlmacenes!!.isEnabled = status
         spin_Ubicaciones!!.isEnabled = status
         spin_Conteo!!.isEnabled = status
         fecha!!.isEnabled = status
@@ -296,7 +296,7 @@ class LoadProductsActivity : AppCompatActivity() {
             val conteo = UserInfo.getConteo(this)
 
             val  adaptadorAlmacen = ArrayAdapter(this, android.R.layout.simple_spinner_item, almacen)
-            spin_Almacenes!!.adapter = adaptadorAlmacen
+            spinAlmacenes!!.adapter = adaptadorAlmacen
             val  adaptadorUbicacion = ArrayAdapter(this, android.R.layout.simple_spinner_item, ubicacion)
             spin_Ubicaciones!!.adapter = adaptadorUbicacion
             val  adaptadorConteo = ArrayAdapter(this, android.R.layout.simple_spinner_item, conteo)
@@ -326,7 +326,7 @@ class LoadProductsActivity : AppCompatActivity() {
         val registroUsuario = ContentValues()
 
         registroUsuario.put("usuario", usuario!!.getUserName())
-        registroUsuario.put("almacen", spin_Almacenes!!.selectedItem.toString())
+        registroUsuario.put("almacen", spinAlmacenes!!.selectedItem.toString())
         registroUsuario.put("ubicacion", spin_Ubicaciones!!.selectedItem.toString())
         registroUsuario.put("conteo", spin_Conteo!!.selectedItem.toString())
         registroUsuario.put("fecha", fecha!!.text.toString())
@@ -344,7 +344,7 @@ class LoadProductsActivity : AppCompatActivity() {
         spin_Conteo!!.adapter = adaptador
     }
 
-    private fun CloseSession(){
+    private fun closeSession(){
         val alert: AlertDialog.Builder = AlertDialog.Builder(this)
 
         alert.setMessage("Está seguro desea salir del sistema?").setCancelable(false)
@@ -438,7 +438,7 @@ class LoadProductsActivity : AppCompatActivity() {
                     android.R.layout.simple_spinner_item,
                     almacenList!!.sorted()
                 )
-                spin_Almacenes!!.adapter = adaptadorAlmacenes
+                spinAlmacenes!!.adapter = adaptadorAlmacenes
             }
 
             if(ubicacionList != null){
@@ -515,7 +515,6 @@ class LoadProductsActivity : AppCompatActivity() {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if(result == "Completado"){
-
                 Toast.makeText(context,"Carga Completada",Toast.LENGTH_SHORT).show()
                 buttonsBehaviour(false)
                 refreshCantidad()
