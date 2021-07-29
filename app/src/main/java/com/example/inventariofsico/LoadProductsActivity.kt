@@ -32,7 +32,6 @@ class LoadProductsActivity : AppCompatActivity() {
     private var productos_cantidad: String = "0"
     private var productos_lector: Int = 0
     private var cantidadTxtView: TextView? = null
-    private var cantidadLectorTxtView: TextView? = null
     private var almacenSeleccionado: String? = null
     private var dateEditText: EditText? = null
 
@@ -55,7 +54,6 @@ class LoadProductsActivity : AppCompatActivity() {
         fecha = findViewById(R.id.eDate)
         loading = findViewById(R.id.progressBar2)
         cantidadTxtView = findViewById(R.id.cantidadTextView)
-        cantidadLectorTxtView = findViewById(R.id.cantidad_lector)
         btnScan = findViewById(R.id.btn_scan)
         btn_Send = findViewById(R.id.btn_sendData)
         btnCloseSession = findViewById(R.id.btn_CloseSession)
@@ -528,9 +526,7 @@ class LoadProductsActivity : AppCompatActivity() {
     }
     private fun refreshCantidad(){
         productos_cantidad = SQLiteFunction.getMainCodigos(this@LoadProductsActivity)
-        productos_lector = SQLiteFunction.countCodigos(this@LoadProductsActivity)
         cantidadTxtView!!.text = "Cantidad: $productos_cantidad"
-        cantidadLectorTxtView!!.text = "Cantidad lector: $productos_lector"
 
     }
 

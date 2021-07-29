@@ -173,14 +173,4 @@
         app:layout_constraintEnd_toStartOf="@+id/progressBar2"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/cantidad_lector"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Cantidad lector:"
-        app:layout_constraintBottom_toTopOf="@+id/cantidadTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/progressBar2" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
