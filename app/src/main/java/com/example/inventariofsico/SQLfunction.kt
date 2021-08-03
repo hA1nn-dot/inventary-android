@@ -120,22 +120,21 @@ class SQLfunction {
                 if (connection != null) {
                     var stat: Statement = connection.createStatement()
                     var resultSet: ResultSet = stat.executeQuery(
-                        "SELECT DISTINCT P.ID,P.PRODUCTO,P.NOMBRE,PP.PRODUCTO,PP.UNIDAD_MEDIDA_EQUIVALENCIA,PP.CODIGO_BARRAS,PU.UBICACION,U.UNIDAD from PRODUCTOS as P "
-                                + "INNER JOIN PRODUCTOS_PRECIOS as PP on P.ID = PP.PRODUCTO AND P.STATUS = 1 "
-                                + "INNER JOIN PRODUCTOS_UBICACIONES as PU on PU.PRODUCTO = PP.PRODUCTO "
-                                + "INNER JOIN UNIDADES as U on U.ID = PP.UNIDAD_MEDIDA_EQUIVALENCIA "
-                                + "INNER JOIN CONTEOS_IF as CI on CI.PRODUCTO = P.ID and CI.FECHA = '$fecha' "
-                                + "AND PU.UBICACION = $id_ubicacion"
+                        "SELECT CI.PRODUCTO,P.PRODUCTO,P.NOMBRE,CI.UNIDAD,PP.CODIGO_BARRAS,U.UNIDAD FROM CONTEOS_IF as CI " +
+                                "INNER JOIN PRODUCTOS as P on P.ID = CI.PRODUCTO AND P.STATUS = 1 "+
+                                "INNER JOIN PRODUCTOS_PRECIOS as PP on PP.PRODUCTO = CI.PRODUCTO "+
+                                "INNER JOIN UNIDADES as U on U.ID = CI.UNIDAD "+
+                                "where CI.UBICACION = $id_ubicacion AND CI.FECHA = '$fecha'"
                     )
 
                     while (resultSet.next()) {
                         registroCodigo.put("id_producto", resultSet.getInt(1))
                         registroCodigo.put("codigo_producto", resultSet.getString(2))
                         registroCodigo.put("nombre", resultSet.getString(3))
-                        registroCodigo.put("id_unidad", resultSet.getInt(5))
-                        registroCodigo.put("barcode", resultSet.getString(6))
-                        registroCodigo.put("id_ubicacion", resultSet.getInt(7))
-                        registroCodigo.put("unidad", resultSet.getString(8))
+                        registroCodigo.put("id_unidad", resultSet.getInt(4))
+                        registroCodigo.put("barcode", resultSet.getString(5))
+                        registroCodigo.put("id_ubicacion", id_ubicacion)
+                        registroCodigo.put("unidad", resultSet.getString(6))
                         db.insert("mainCodigos", null, registroCodigo)
                     }
                 }
