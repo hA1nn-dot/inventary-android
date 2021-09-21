@@ -52,4 +52,8 @@ class RegisterData : Usuario() {
         return barcode
     }
 
+    fun printRegisterInfo(): String{
+        return "ID: ${get_Id_Producto()}\n ID unidad: ${get_Id_Unidad()} \n Ubication: ${get_Id_Ubicacion()} \n barcode: ${getBarcode()} \n cantidad: ${get_CantidadProducto()}"
+    }
+
 }

@@ -2,6 +2,7 @@ package com.example.inventariofsico
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.database.sqlite.SQLiteException
 import android.os.AsyncTask
@@ -42,22 +43,27 @@ class LoadProductsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_load_products)
-        getSupportActionBar()!!.hide()
+        supportActionBar!!.hide()
         val bundle = this.intent.extras
         val bundleUsuario = bundle?.getSerializable("usuarioEnviado") as Usuario
         val title: TextView = findViewById(R.id.titulo)
 
-        btnLoadProducts = findViewById(R.id.btn_CargarDatos)
+        //Spinners and EditText date
         spinAlmacenes = findViewById(R.id.spinnerAlmacenes)
         spin_Ubicaciones = findViewById(R.id.spinnerUbicaciones)
         spin_Conteo = findViewById(R.id.spinnerConteo)
         fecha = findViewById(R.id.eDate)
         loading = findViewById(R.id.progressBar2)
         cantidadTxtView = findViewById(R.id.cantidadTextView)
+        dateEditText = findViewById(R.id.eDate)
+
+        //Buttons
+        btnLoadProducts = findViewById(R.id.btn_CargarDatos)
         btnScan = findViewById(R.id.btn_scan)
         btn_Send = findViewById(R.id.btn_sendData)
         btnCloseSession = findViewById(R.id.btn_CloseSession)
-        dateEditText = findViewById(R.id.eDate)
+        val btn_Reset = findViewById<Button>(R.id.btn_Reset)
+
         usuario = bundleUsuario
         title.text = "Bienvenido ${usuario!!.getUserName()}"
 
@@ -90,7 +96,9 @@ class LoadProductsActivity : AppCompatActivity() {
             showAlertDialogToSendAllProductsToServer()
             refreshCantidad()
         }
-
+        btn_Reset.setOnClickListener {
+            createResetDialog()
+        }
         spinAlmacenes!!.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, id: Long) {
                 if(almacenSeleccionado == null){
@@ -103,6 +111,35 @@ class LoadProductsActivity : AppCompatActivity() {
             override fun onNothingSelected(p0: AdapterView<*>?) {
 
             }
+        }
+
+    }
+
+    private fun createResetDialog() {
+        val dialogBuilder = AlertDialog.Builder(this,R.style.AlertDialog_AppCompat)
+        val inflater = this.layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_action_reset,null)
+        dialogBuilder.setView(dialogView)
+
+        val editText: EditText = dialogView.findViewById(R.id.password)
+        val btn_AcceptReset : Button = dialogView.findViewById(R.id.accept_button)
+        val btn_CancelReset : Button = dialogView.findViewById(R.id.cancel_button)
+        val alertDialog = dialogBuilder.create()
+        alertDialog.show()
+
+        btn_AcceptReset.setOnClickListener {
+            if(editText.text.toString() == "Ibague2021"){
+                SQLiteFunction._deleteMainCodigos(this)
+                SQLiteFunction._deleteCodes(this)
+                buttonsBehaviour(true)
+                refreshCantidad()
+                printMessageByToast("Lector reseteado")
+                alertDialog.dismiss()
+            }else printMessageByToast("Contraseña incorrecta")
+        }
+        btn_CancelReset.setOnClickListener {
+            Toast.makeText(this,"Cancelado",Toast.LENGTH_SHORT).show()
+            alertDialog.dismiss()
         }
 
     }
@@ -173,9 +210,17 @@ class LoadProductsActivity : AppCompatActivity() {
             super.onPostExecute(result)
             btn_Send!!.isEnabled = true
             if(result == "Descarga completada"){
-                deleteProducts()
-                getRequest().execute()
-                loadConteo()
+                if(SQLiteFunction.countCodigos(context) == 0){
+                    deleteProducts()
+                    getRequest().execute()
+                    loadConteo()
+                }else{
+                    refreshCantidad()
+                    loading!!.visibility = View.INVISIBLE
+                    Toast.makeText(context,"No se han cargado todos los codigos, favor de reenviar de nuevo",Toast.LENGTH_SHORT).show()
+                    return
+                }
+
             }
             refreshCantidad()
             loading!!.visibility = View.INVISIBLE
@@ -186,71 +231,35 @@ class LoadProductsActivity : AppCompatActivity() {
         override fun doInBackground(vararg p0: Void?): String {
             val context = this@LoadProductsActivity
             var message = "Descarga completada"
-            var queryString = ""
+
             try {
                 registers.forEach {
-                    val connection = SQLServerConnection.getConnection(context)
-                    if (connection != null) {
-                        if(it.get_Id_Producto() == 0 && it.get_Id_Ubicacion() == 0 && it.get_Id_Ubicacion() == 0){
-                            val idFoundProduct = SQLfunction.searchIdProduct(context,it)
-                            if(idFoundProduct.count() != 0){
-                                it.set_Id_Producto(idFoundProduct["idProduct"]?: 0)
-                                it.set_Id_Ubicacion(idFoundProduct["idUbication"]?: 0)
-                                it.set_Id_Unidad(idFoundProduct["idUnit"]?:0)
-                            }
-                        }
-                        val conteoSQL = SQLfunction.getCurrentConteo(
-                            it.get_Conteo(),
-                            it.get_Id_Producto(),
-                            it.get_Id_Unidad(),
-                            it.get_Id_Ubicacion(),
-                            it.get_FechaCaptura(),
-                            connection,
-                        )
-                        val existenceProduct = SQLfunction.getExistenceOfConteo(
-                            it.get_Id_Producto(),
-                            it.get_Id_Unidad(),
-                            it.get_Id_Ubicacion(),
-                            it.get_FechaCaptura(),
-                            connection
-                        )
-                        val currentConteo = conteoSQL + it.get_CantidadProducto()!!
-                        val conteoDifference = currentConteo - existenceProduct
-                        if(it.get_Conteo() == "Conteo 1"){
-                            queryString = "UPDATE CONTEOS_IF SET CONTEO1 = $currentConteo," +
-                                    " USUARIO1 = '${it.getUserName()}'," +
-                                    " DIFERENCIA = $conteoDifference" +
-                                    " WHERE PRODUCTO = ${it.get_Id_Producto()}" +
-                                    " AND FECHA = '${it.get_FechaCaptura()}'" +
-                                    " AND UNIDAD = ${it.get_Id_Unidad()}" +
-                                    " AND UBICACION = ${it.get_Id_Ubicacion()}"
-                        }else if(it.get_Conteo() == "Conteo 2"){
-                            queryString = "UPDATE CONTEOS_IF SET CONTEO2 = $currentConteo," +
-                                    " USUARIO2 = '${it.getUserName()}'," +
-                                    " DIFERENCIA = $conteoDifference" +
-                                    " WHERE PRODUCTO = ${it.get_Id_Producto()}" +
-                                    " AND FECHA = '${it.get_FechaCaptura()}'" +
-                                    " AND UNIDAD = ${it.get_Id_Unidad()}" +
-                                    " AND UBICACION = ${it.get_Id_Ubicacion()}"
-                        }
-
-                        val stat: Statement = connection.createStatement()
-                        stat.executeUpdate(queryString)
-                        SQLiteFunction._deleteProductFromSQLite(it,context)
-                    }else message = "Error en la conexión de red, favor de verificar"
+                    println(it.printRegisterInfo())
+                    if(it.get_Id_Producto() == 0 || it.get_Id_Unidad() == 0) {
+                        SQLfunction.searchProductIds(it, context)
+                        SQLiteFunction.updateProductIds(it, context)
+                    }
+                    if (SQLfunction.isProductExistsInBackUpTable(it, context))
+                        SQLfunction.updateProductInBackUpTable(it, context)
+                    else
+                        SQLfunction.insertProductInBackUpTable(it, context)
+                    SQLfunction.updateProductInCONTEOS_IFTable(it, context)
+                    
+                    SQLiteFunction._deleteProductFromSQLite(it, context)
                 }
             }catch (sqlX: SQLException){
-                message = "SQL Error: "+sqlX.message.toString()
+                message = "SQL Error: \n"+sqlX.message.toString()
             }catch (liteError: SQLiteException){
-                message = "SQLite Error: "+liteError.message.toString()
+                message = "SQLite Error: \n"+liteError.message.toString()
             }catch (runtimeError: RuntimeException){
-                message = "Run time Error: "+runtimeError.message.toString()
+                message = "Run time Error: \n"+runtimeError.message.toString()
+            }catch (error: Exception){
+                message = "Exception: \n" + error.message.toString()
+                println(message)
             }
 
             return message
         }
-
-
     }
 
 
@@ -390,6 +399,9 @@ class LoadProductsActivity : AppCompatActivity() {
                         val ubicacionRioverde: List<String> = listOf("Todas las áreas")
                         ubicacionList = ubicacionRioverde
                         ubicationRioVerdeList = SQLfunction.getUbicaciones(id_almacen.toInt(),context)
+                        ubicationRioVerdeList?.forEach {
+                            println(it)
+                        }
                     }else{
                         ubicacionList =  SQLfunction.getUbicaciones(id_almacen.toInt(),context)
                     }
@@ -462,6 +474,7 @@ class LoadProductsActivity : AppCompatActivity() {
         override fun onPreExecute() {
             super.onPreExecute()
             loading!!.visibility = View.VISIBLE
+            btnLoadProducts!!.isEnabled = false
         }
 
         override fun doInBackground(vararg p0: Void?): String? {
@@ -473,10 +486,7 @@ class LoadProductsActivity : AppCompatActivity() {
                         return "No hay conteos en la fecha $dateSelected"
                     ubicationRioVerdeList!!.forEach{
                         val ubicationID = SQLfunction.getIDUbicacion(it,context)
-                        resultCodigos = SQLfunction.getBarcodes(ubicationID,dateSelected,context)
-                        //Comprobar si es la misma cantidad
-                        //val countProduct = SQLfunction.getCountProductFromServer(context,dateSelected,ubicationID)
-                        //if(SQLiteFunction.getMainCodigos(context).toInt() == countProduct)
+                        resultCodigos = SQLfunction.getBarcodesRioVerde(ubicationID,dateSelected,context)
                         if (resultCodigos != "Completado") return resultCodigos
                     }
                     val resultUsuario = loadUser()
@@ -518,8 +528,10 @@ class LoadProductsActivity : AppCompatActivity() {
                 Toast.makeText(context,"Carga Completada",Toast.LENGTH_SHORT).show()
                 buttonsBehaviour(false)
                 refreshCantidad()
-            }else
+            }else{
                 Toast.makeText(context,result,Toast.LENGTH_SHORT).show()
+                btnLoadProducts!!.isEnabled = true
+            }
             loading!!.visibility = View.INVISIBLE
         }
     }

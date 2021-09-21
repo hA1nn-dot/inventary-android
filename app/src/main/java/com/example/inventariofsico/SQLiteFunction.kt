@@ -411,7 +411,7 @@ open class SQLiteFunction {
                     db.update("codigos",values,"codigo=?", arrayOf(product.getBarcode()))
                 }else {
                     db.update("codigos",values,"id_producto=? AND id_unidad=? AND id_ubicacion =?",args)
-                    "Cantidad actualizada"
+                    println("Producto ${product.get_Id_Producto()} borrado, cantidad: ${product.get_CantidadProducto()}")
                 }
             }catch (liteError: SQLiteException){
                 throw liteError
@@ -517,6 +517,16 @@ open class SQLiteFunction {
             }else
                 db.execSQL("DELETE FROM codigos WHERE id_producto = ${product.getIdProduct()} AND id_unidad = ${product.getIdUnit()}")
             db.close()
+        }
+        fun updateProductIds(product: RegisterData, context: Context){
+            val admin = SQLiteConnection(context,"administracion",null,1)
+            val db = admin.writableDatabase
+            val values = ContentValues()
+            val args = arrayOf(product.getBarcode())
+            values.put("id_producto",product.get_Id_Producto())
+            values.put("id_unidad",product.get_Id_Unidad())
+            values.put("id_ubicacion",product.get_Id_Ubicacion())
+            db.update("codigos",values,"codigo=?",args)
         }
     }
 }
