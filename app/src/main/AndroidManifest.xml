@@ -9,7 +9,7 @@
         android:roundIcon="@mipmap/inventario2"
         android:supportsRtl="true"
         android:theme="@style/Theme.InventarioFísico">
-        <activity android:name=".ScanerActivity" />
+        <activity android:name=".ScannerActivity" />
         <activity android:name=".LoadProductsActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>

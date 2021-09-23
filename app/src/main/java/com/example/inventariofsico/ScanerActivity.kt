@@ -8,10 +8,9 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import org.w3c.dom.Text
 import java.lang.NullPointerException
 
-class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
+class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
     private var text_codigo: EditText? = null
     private var text_cantidad: EditText? = null
     private var btnGuardar: Button? = null
@@ -41,19 +40,20 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         text_IDProducto = findViewById(R.id.id_productoTxt)
 
         text_codigo!!.requestFocus()
-        text_cantidad!!.isEnabled = false
 
         text_codigo!!.filters += InputFilter.AllCaps()
         setUbicacion()
         val listCleaned = listOf("<Cargue producto>")
         val  adapterUnidad = ArrayAdapter(
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listCleaned
         )
         spinnerUnidades!!.adapter = adapterUnidad
 
         btnGuardar!!.setOnClickListener {
+            if(NullFieldsExists())
+                return@setOnClickListener
             guardarCodigo()
             cleanBoxes()
         }
@@ -81,19 +81,30 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         }
     }
 
+    private fun NullFieldsExists(): Boolean{
+        val barcode = text_codigo!!.text.toString()
+        val amount = text_cantidad!!.text.toString()
+        if(barcode.isNullOrEmpty()){
+            printMessageByToast("Ingrese un código de barras o la clave del producto")
+            return true
+        }else if(amount.isNullOrEmpty()){
+            printMessageByToast("Ingrese una cantidad")
+            return true
+        }
+
+        return false
+    }
+
     private fun changeAmount(barcode: String) {
         var cantidadFound = "1"
         var errorMessage = ""
         id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
         id_producto = SQLiteFunction.getIDProduct(this,barcode)
-        //text_IDUnidad!!.text = "id_unidad: $id_unidad"
-        //text_IDProducto!!.text = "id_producto: $id_producto"
 
         try {
-            if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
+            if(SQLiteFunction.isCodeExistsinCodesTableById(this,id_unidad,id_producto)){
                 cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
-            }else
-                Toast.makeText(this@ScanerActivity, "Producto Nuevo", Toast.LENGTH_SHORT).show()
+            }
             text_cantidad!!.setText(cantidadFound)
 
         }catch (liteX: SQLiteException){
@@ -102,7 +113,7 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
             errorMessage = nullvar.message.toString()
         }
         if(errorMessage != "")
-            Toast.makeText(this@ScanerActivity, errorMessage, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@ScannerActivity, errorMessage, Toast.LENGTH_SHORT).show()
         text_cantidad!!.requestFocus(cantidadFound.length)
 
     }
@@ -135,7 +146,11 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
                     }
                     R.id.textCantidad -> {
                         if(keycode == KeyEvent.KEYCODE_ENTER){
-                            guardarCodigo()
+                            if(text_cantidad!!.text.toString() != "0"){
+                                guardarCodigo()
+                                cleanBoxes()
+                            }
+
                         }
 
                     }
@@ -167,51 +182,68 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
     private fun displayDataProduct(){
         val barcode = text_codigo!!.text.toString()
         var cantidadFound = "1"
-
-        //Display product units
         loadUnitsProduct(barcode)
-        val unit = spinnerUnidades!!.selectedItem.toString()
+        val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)
+        if(productoDescrition != "Producto no encontrado"){
+            id_unidad = SQLiteFunction.getIDUnidad(this,spinnerUnidades!!.selectedItem.toString())
+            id_producto = SQLiteFunction.getIDProduct(this,barcode)
+            try {
+                if(SQLiteFunction.isCodeExistsinCodesTableById(this,id_unidad,id_producto))
+                    cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
+            }catch (liteX: SQLiteException){
+                errorMessage = liteX.message.toString()
+            }catch (nullvar: NullPointerException){
+                errorMessage = nullvar.message.toString()
+            }
+            if(errorMessage != "")
+                printMessageByToast(errorMessage)
+        }else if(SQLiteFunction.isCodeExistsInCodesTableByBarcode(this,barcode)){
 
-        //Get id for product
-        id_unidad = SQLiteFunction.getIDUnidad(this,unit)
-        id_producto = SQLiteFunction.getIDProduct(this,barcode)
+            cantidadFound = searchUnknownProductInCodesTable()
+        }
 
-        if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto))
-            cantidadFound = SQLiteFunction.getCantidad(this,id_producto.toString(),id_unidad.toString())
-
-        text_cantidad!!.isEnabled = true
         text_cantidad!!.setText(cantidadFound)
         text_cantidad!!.requestFocus(1)
+        text_descripcion!!.text = productoDescrition
     }
 
-    private fun saveUnknownProduct(){
+    private fun searchUnknownProductInCodesTable():String{
         val barcode = text_codigo!!.text.toString()
-        val amount = text_cantidad!!.text.toString()
+        val cantidad = SQLiteFunction.getCantidad(this,barcode)
+        return cantidad.toString()
+    }
 
-        val product: Map<String,String> = mapOf(
-            Pair("barcode",barcode),
-            Pair("amount",amount))
-        val alert = AlertDialog.Builder(this)
-        alert.setMessage("No se encuentra este producto en el lector.\n¿Desea guardarlo?")
-            .setCancelable(false)
+    private fun showAlertDialogIfAddUnknownProduct(product: Product){
+        val alert: AlertDialog.Builder = AlertDialog.Builder(this)
+        alert.setMessage("¿Seguro que desea guardar este producto?").setCancelable(false)
             .setPositiveButton("Guardar")
-            { _, _ ->   //Save unknown product
-                SQLiteFunction.addUnknownProduct(product,this)
+            { _, _ ->
+                SQLiteFunction.insertProduct(this,product)
+                printMessageByToast("Producto Guardado")
+                cleanBoxes()
             }
             .setNegativeButton("No")
-            { _, _ ->   //Close dialog
-
+            { _, _ ->
+                printMessageByToast("Producto Cancelado")
+                cleanBoxes()
             }
         val title = alert.create()
         title.setTitle("Producto no encontrado")
         title.show()
     }
 
+    fun printMessageByToast(message: String){
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
     private fun loadUnitsProduct(barcode: String) {
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
-        val listUnidades = SQLiteFunction.getUnidades(this,barcode)
+        var listUnidades = SQLiteFunction.getUnidades(this,barcode)
+        if(listUnidades.count() == 0){
+            listUnidades = listOf("<Cargue producto>")
+        }
         val  adapterUnidad = ArrayAdapter(              //Load list of unidades
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listUnidades
         )
@@ -220,33 +252,38 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
     }
 
     private fun guardarCodigo(){
-        var barcode = text_codigo!!.text.toString()
-        var cant = text_cantidad!!.text.toString()
-        var unidadtxt = spinnerUnidades!!.selectedItem.toString()
-        var result = ""
-        cant = cant.replace(" ","")
-        barcode = barcode.replace(" ","")
+        val context = this
+        val product = Product()
+        product.setBarCode(text_codigo!!.text.toString())
+        product.setAmount(text_cantidad!!.text.toString())
+        product.setUnitText(spinnerUnidades!!.selectedItem.toString())
+        product.setIdsProduct(context)
+        product.setDate(context)
 
-        if(barcode.isNotEmpty() && cant.isNotEmpty()){
-            if(SQLiteFunction.isCodeExists(this,id_unidad,id_producto)){
-                SQLiteFunction._updateRegister(this,cant,id_producto,id_unidad)
-                result = "Producto Actualizado"
-            }else{
-                saveUnknownProduct()
-                result = "Producto Guardado"
+        if(product.isInCodesTable(context)){
+            if(product.getCantidad() == 0){
+                SQLiteFunction.deleteProductFromCodesTable(context,product)
+                printMessageByToast("Producto Eliminado")
+                return
             }
-            cleanBoxes()
-        }else
-            result = "Favor de rellenar los espacios vacios"
-        Toast.makeText(this@ScanerActivity,result,Toast.LENGTH_SHORT).show()
+            SQLiteFunction.updateProduct(this,product)
+            printMessageByToast("Producto Actualizado")
+            return
+        }
+        else if(product.isExistsInMainCodesTable(context)){
+            SQLiteFunction.insertProduct(context,product)
+            printMessageByToast("Producto Guardado")
+            return
+        }else{
+            showAlertDialogIfAddUnknownProduct(product)
+        }
     }
-
 
     private fun cleanBoxes(){
         val spinnerUnidad: Spinner = findViewById(R.id.spinner_Unidad)
         val listCleaned = listOf("<Cargue producto>")
         val  adapterUnidad = ArrayAdapter(
-            this@ScanerActivity,
+            this@ScannerActivity,
             android.R.layout.simple_spinner_item,
             listCleaned
         )
@@ -254,7 +291,6 @@ class ScanerActivity : AppCompatActivity(), View.OnKeyListener {
         text_codigo!!.setText("")
         text_codigo!!.requestFocus()
         text_cantidad!!.setText("")
-        text_cantidad!!.isEnabled = false
         text_descripcion!!.text = ""
         text_IDProducto!!.text = ""
         text_IDUnidad!!.text = ""

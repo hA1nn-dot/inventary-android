@@ -15,7 +15,6 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:backgroundTint="@color/material_on_surface_disabled"
-        android:onClick="onClick"
         android:text="Cerrar Sesión"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -45,7 +44,6 @@
         android:focusable="false"
         android:gravity="center"
         android:hint="No hay fecha"
-        android:onClick="onClick"
         app:layout_constraintBottom_toTopOf="@+id/btn_sendData"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,7 +154,6 @@
         android:id="@+id/cantidadTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="Cantidad: "
         app:layout_constraintBottom_toTopOf="@+id/btn_CargarDatos"
@@ -175,14 +172,15 @@
         app:layout_constraintEnd_toStartOf="@+id/progressBar2"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/cantidad_lector"
+    <Button
+        android:id="@+id/btn_Reset"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Cantidad lector:"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@android:color/holo_orange_light"
+        android:text="Reset"
         app:layout_constraintBottom_toTopOf="@+id/cantidadTextView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/progressBar2" />
+        app:layout_constraintTop_toBottomOf="@+id/eDate" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

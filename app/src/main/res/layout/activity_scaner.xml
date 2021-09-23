@@ -5,7 +5,7 @@
     android:id="@+id/pantalla"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ScanerActivity">
+    tools:context=".ScannerActivity">
 
     <EditText
         android:id="@+id/codigoBarrasTxt"
@@ -93,6 +93,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:textSize="40dp"
+        android:textAlignment="center"
         app:layout_constraintBottom_toTopOf="@+id/btn_clearBoxes"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
