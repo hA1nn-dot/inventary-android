@@ -170,17 +170,18 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
                 //saveUnknownProduct()    //add new product
             text_descripcion!!.text = productoDescrition
         }catch (SQLError: SQLException){
-            Toast.makeText(this@ScanerActivity, SQLError.message.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, SQLError.message.toString(), Toast.LENGTH_SHORT).show()
         }catch (SQLiteError: SQLiteException){
-            Toast.makeText(this@ScanerActivity, SQLiteError.message.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, SQLiteError.message.toString(), Toast.LENGTH_SHORT).show()
         }catch (nullPointerError: NullPointerException){
-            Toast.makeText(this@ScanerActivity, nullPointerError.message.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, nullPointerError.message.toString(), Toast.LENGTH_SHORT).show()
         }
 
     }
 
     private fun displayDataProduct(){
         val barcode = text_codigo!!.text.toString()
+        var errorMessage = ""
         var cantidadFound = "1"
         loadUnitsProduct(barcode)
         val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)

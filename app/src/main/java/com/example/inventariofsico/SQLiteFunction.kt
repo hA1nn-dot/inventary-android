@@ -8,7 +8,7 @@ import java.sql.SQLException
 
 open class SQLiteFunction {
     companion object{
-        fun getCantidad(context: Context, barcode: String): Int{
+        /*fun getCantidad(context: Context, barcode: String): Int{
             try {
                 var cantidad = 1
                 val admin = SQLiteConnection(context,"administracion",null,1)
@@ -24,7 +24,7 @@ open class SQLiteFunction {
             }catch (nullvar: NullPointerException){
                 throw NullPointerException("Null exception: "+nullvar.message.toString())
             }
-        }
+        }*/
 
         fun getCantidad(context: Context, id_producto: String,id_unidad: String): String{
             try {
