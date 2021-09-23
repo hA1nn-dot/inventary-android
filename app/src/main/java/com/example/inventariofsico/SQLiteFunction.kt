@@ -42,10 +42,27 @@ open class SQLiteFunction {
             }catch (nullvar: NullPointerException){
                 throw NullPointerException("Null exception: "+nullvar.message.toString())
             }
+        }
 
-
+        fun getCantidad(context: Context, barcode: String): String{
+            try {
+                var cantidad = "1"
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT cantidad FROM codigos WHERE codigo ) $barcode",null)
+                if(fila.moveToFirst())
+                    cantidad = fila.getString(fila.getColumnIndex("cantidad"))
+                fila.close()
+                db.close()
+                return cantidad
+            }catch (sqlexc: SQLiteException){
+                throw SQLiteException("Problemas con SQLite: "+sqlexc.message.toString())
+            }catch (nullvar: NullPointerException){
+                throw NullPointerException("Null exception: "+nullvar.message.toString())
+            }
         }
         fun getUbicacion(context: Context,id_producto: Int,id_unidad: Int): Int{
+
             try {
                 var id_ubicacion = 0
                 val admin = SQLiteConnection(context,"administracion",null,1)
@@ -110,6 +127,22 @@ open class SQLiteFunction {
                 val db = admin.readableDatabase
                 val fila = db.rawQuery("SELECT * FROM codigos where codigo = '$barcode'",null)
                 if(fila.count != 0)
+                    status = true
+                fila.close()
+                db.close()
+                return status
+            }catch (liteX: SQLiteException){
+                throw SQLiteException("Error SQLite: "+liteX.message.toString())
+            }
+        }
+
+        fun isCodeExists(context: Context, barcode: String): Boolean{
+            var status = false
+            try {
+                val admin = SQLiteConnection(context,"administracion",null,1)
+                val db = admin.readableDatabase
+                val fila = db.rawQuery("SELECT * FROM codigos where codigo = '$barcode'",null)
+                if(fila.moveToFirst())
                     status = true
                 fila.close()
                 db.close()
@@ -323,7 +356,7 @@ open class SQLiteFunction {
                 val db = admin.writableDatabase
                 val fila = db.rawQuery("SELECT nombre FROM mainCodigos where barcode = '$codigo_leido' OR codigo_producto = '$codigo_leido'",null)
                 if(fila.moveToFirst())
-                    descripcion = fila.getString(0)
+                    descripcion = fila.getString(fila.getColumnIndex("nombre"))
                 fila.close()
                 db.close()
             }catch (sqlexc: SQLException){

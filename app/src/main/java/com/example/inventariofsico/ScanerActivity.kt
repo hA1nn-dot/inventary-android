@@ -1,4 +1,5 @@
 package com.example.inventariofsico
+import android.database.SQLException
 import android.database.sqlite.SQLiteException
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -158,9 +159,28 @@ class ScannerActivity : AppCompatActivity(), View.OnKeyListener {
         }
         return false
     }
-
     private fun searchCode(barcode: String){
-        var errorMessage = ""
+        try{
+            val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)
+            if(productoDescrition != "Producto no encontrado")     //if exists code in mainCodigos table
+                displayDataProduct()
+            else if(SQLiteFunction.isCodeExists(this,barcode))    //if exists code in codigos table
+                text_cantidad!!.setText(SQLiteFunction.getCantidad(this,barcode))
+            else
+                //saveUnknownProduct()    //add new product
+            text_descripcion!!.text = productoDescrition
+        }catch (SQLError: SQLException){
+            Toast.makeText(this@ScanerActivity, SQLError.message.toString(), Toast.LENGTH_SHORT).show()
+        }catch (SQLiteError: SQLiteException){
+            Toast.makeText(this@ScanerActivity, SQLiteError.message.toString(), Toast.LENGTH_SHORT).show()
+        }catch (nullPointerError: NullPointerException){
+            Toast.makeText(this@ScanerActivity, nullPointerError.message.toString(), Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun displayDataProduct(){
+        val barcode = text_codigo!!.text.toString()
         var cantidadFound = "1"
         loadUnitsProduct(barcode)
         val productoDescrition = SQLiteFunction.buscaNombreCodigo(this,barcode)

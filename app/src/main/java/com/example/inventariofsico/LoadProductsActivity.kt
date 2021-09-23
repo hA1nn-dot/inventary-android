@@ -46,6 +46,7 @@ class LoadProductsActivity : AppCompatActivity() {
         supportActionBar!!.hide()
         val bundle = this.intent.extras
         val bundleUsuario = bundle?.getSerializable("usuarioEnviado") as Usuario
+
         val title: TextView = findViewById(R.id.titulo)
 
         //Spinners and EditText date
@@ -64,8 +65,8 @@ class LoadProductsActivity : AppCompatActivity() {
         btnCloseSession = findViewById(R.id.btn_CloseSession)
         val btn_Reset = findViewById<Button>(R.id.btn_Reset)
 
-        usuario = bundleUsuario
-        title.text = "Bienvenido ${usuario!!.getUserName()}"
+        //usuario = bundleUsuario
+        //title.text = "Bienvenido ${usuario!!.getUserName()}"
 
         refreshCantidad()
         if(SQLiteFunction.isUserExistsInDataBase(this)){
